@@ -124,7 +124,14 @@ Once **successfully** executed, your instance should be available at `chat.your-
 
 ------
 
-## Tested Node Versions
+## Tested Versions
+
+### Bun:
+
+- ✔️ 1.3.5
+
+### Node:
+
 - ✔️ v24.11.1
 - ✔️ v21.7.3
 - ✔️ v20.19.2
