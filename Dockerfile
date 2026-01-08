@@ -3,17 +3,15 @@
 # ---------------------------
 
 FROM oven/bun:1-slim
-RUN apt-get update && apt-get install -y npm
 
 WORKDIR /app
 
 COPY package.json bun.lock ./
 
-RUN bun install --frozen-lockfile --production
+RUN bun install --production
 
 COPY . .
 
 EXPOSE 2052
 
 CMD ["bun", "."]
-
