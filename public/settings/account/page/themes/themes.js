@@ -53,7 +53,8 @@ async function displayThemes() {
         let option = document.createElement("option");
         option.value = theme;
         option.text = theme.split(".")[0];
-        if(theme === UserManager.getTheme()) option.selected = true;
+        console.log(theme, UserManager.getTheme());
+        if(theme === UserManager.getTheme().split(".")[0]) option.selected = true;
 
         themeSelect.appendChild(option);
     })

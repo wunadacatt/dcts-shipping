@@ -4,6 +4,22 @@ class ChatManager {
     static connectionLost = false;
     static wasConnected = false;
 
+    static countryCodeToEmoji(code) {
+        if (!code || code.length !== 2) {
+            return `<img src="/img/default_emojis/1f30d.svg" class="inline-text-emoji">`;
+        }
+
+        const codepoints = code
+            .toUpperCase()
+            .split("")
+            .map(c => (0x1F1E6 + c.charCodeAt(0) - 65).toString(16).toUpperCase())
+            .join("-");
+
+        return `<img src="/img/default_emojis/${codepoints.toLowerCase()}.svg" title="${code?.toUpperCase()}" class="inline-text-emoji">`;
+    }
+
+
+
     static applyThemeOnLoad(theme, accent) {
         if (!theme) return;
 
@@ -82,6 +98,113 @@ class ChatManager {
         }
     }
 
+    static getDMFromUrl() {
+        var url = window.location.search;
+        var urlParams = new URLSearchParams(url);
+        var urlChannel = urlParams.get("dm");
+
+        if (urlChannel == null) {
+            return null;
+        } else {
+            return urlChannel;
+        }
+    }
+
+    static async showInstanceInfo(notice = null, noticeColor = "transparent"){
+        let infoData;
+        if(socket.connected){
+            infoData = await getServerInfo(true);
+            infoData = infoData.serverinfo
+        }
+
+        // fallback to /discover
+        if(!infoData){
+            try{
+                let request = await fetch("/discover");
+                if(request.status === 200){
+                    let serverInfoData = await request.json();
+                    infoData = serverInfoData.serverinfo
+                }
+                else{
+                    console.error(request);
+                    return;
+                }
+            }catch(err){
+                console.error(err)
+            }
+        }
+
+        // everything failed
+        if(!infoData) {
+            console.error("Couldnt get server info");
+            return
+        }
+
+        let versionText = `v${String(infoData.version).split("").join(".")}`
+        let contactData = infoData.instance.contact;
+
+        let shortRedditUrl = `r/${contactData?.reddit?.split("/r/")[1]}`;
+        let shortGithubUrl = `${contactData?.github?.split(".com/")[1]}`;
+        let shortDiscordUrl = `gg/${contactData?.discord?.split(".gg/")[1]}`;
+
+        customPrompts.showPrompt(
+            `Instance Info`,
+            `
+
+            ${notice ? `<div style="
+                            padding: 10px;
+                            display: flex; 
+                            width: 100%; 
+                            background-color: hsl(from ${noticeColor} h s l / 40%);
+                            border: 1px solid hsl(from ${noticeColor} h s l / 100%);
+                            border-radius: 4px;
+                            justify-content: center;
+                        ">
+                            ${notice}
+                        </div>`
+            : ""}
+
+             <div style="display: flex; gap: 80px;">
+                <div style="display: flex; flex-direction: column; justify-content: start;">
+                    <h3 style="margin-bottom: 0;">Contact Information</h3>
+                    <p style="margin-top: 8px;">This instance is run by:<br> ${contactData.owner.name}</p>
+                    
+                    <ul style="padding-left: 20px;line-height: 1.5;">
+                        ${contactData.email ? `<li>Email: <a href=mailto:"${contactData.email}" target="_blank">${contactData.email}</a></li>` : ""}
+                        ${contactData.website ? `<li>Website: <a href="${contactData.website}" target="_blank">${contactData.website}</a></li>` : ""}
+                        ${contactData.reddit ? `<li>Reddit: <a href="${contactData.reddit}" target="_blank">${shortRedditUrl}</a></li>` : ""}
+                        ${contactData.github ? `<li>Github: <a href="${contactData.github}" target="_blank">${shortGithubUrl}</a></li>` : ""}
+                        ${contactData.discord ? `<li>Discord: <a href="${contactData.discord}" target="_blank">${shortDiscordUrl}</a></li>` : ""}
+                        ${contactData.signal ? `<li>Signal: ${contactData.signal}</li>` : ""}
+                    </ul>                    
+                    
+                </div>
+                
+                <div style="display: flex; flex-direction: column; margin-left: auto;">
+                    <h3 style="margin-bottom: 6px;">Instance Information</h3>
+                    
+                    <a onclick="Docs.open('/Web Client/Main/Instance Info.md')">Documentation</a>
+                    <a href="https://github.com/hackthedev/dcts-shipping/releases/tag/${versionText}" target="_blank">Version ${versionText}</a>
+                    
+                </div>
+            </div>    
+             
+            `,
+            async function (values) {
+                let inviteCode = values?.inviteCode;
+
+                if (inviteCode && inviteCode.length > 0) {
+                    userJoined(false, null, null, inviteCode);
+                }
+
+                if (!inviteCode) {
+                    userJoined();
+                }
+            },
+            ["Ok", null],
+            null
+        )
+    }
 
     static async uploadFile(files, type = "upload") {
         const file = files[0];
@@ -164,7 +287,9 @@ class ChatManager {
     }
 
     static proxyUrl(url){
+        if(!url) return null;
         if(url.startsWith(window.location.origin)) return url;
+        if(url.startsWith(encodeURIComponent(window.location.origin))) return decodeURIComponent(url);
         if(url.startsWith("data:")) return url;
         if(url.startsWith("/uploads")) return url;
         if(url.startsWith("/img")) return url;
@@ -236,6 +361,24 @@ class ChatManager {
             return;
         }
         return Number(localStorage.getItem(`message-marker-${channelId}`))
+    }
+
+    static async resolveMessage(messageId) {
+        return new Promise((resolve, reject) => {
+            socket.emit("resolveMessage", {
+                id: UserManager.getID(),
+                token: UserManager.getToken(),
+                messageId
+            }, async (response) => {
+                if (response?.error != null) {
+                    console.error("Couldnt resolve message");
+                    console.error(response.error);
+                    resolve(null)
+                } else {
+                    resolve(response)
+                }
+            })
+        })
     }
 
     static setChannelMarkerCounter(channelId, counter) {

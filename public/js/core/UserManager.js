@@ -50,10 +50,10 @@ class UserManager {
         }
 
         return `
-            <div id="profile_banner" style="background-image: url('${ChatManager.proxyUrl(memberObj?.banner)}')"></div>
+            <div id="profile_banner" draggable="false" style="background-image: url('${ChatManager.proxyUrl(memberObj?.banner)}')"></div>
         
             <div id="profile_pfp_container">
-                <div id="profile_icon" style="background-image: url('${ChatManager.proxyUrl(memberObj?.icon)}');"></div>
+                <div id="profile_icon" draggable="false" style="background-image: url('${ChatManager.proxyUrl(memberObj?.icon)}');"></div>
                 <div class="profile_meta">
                     <div class="info">
                         <h1>Joined</h1>
@@ -82,7 +82,7 @@ class UserManager {
         
             <div id="profile_content">       
                 <div id="profile_username"><h2 style="margin-bottom: 0 !important;">${memberObj?.name}</h2></div>                
-                <div id="profile_status"><i>${memberObj?.status}</i></div>                
+                <div id="profile_status">${ChatManager.countryCodeToEmoji(memberObj?.country_code)} <i>${memberObj?.status}</i></div>                
                 <div id="profile_badge_container" data-gid="${isLauncher() ? await Crypto.GenerateGid(memberObj?.publicKey) : ""}"></div> 
                 
                 <div class="profile_aboutme">       
@@ -100,6 +100,9 @@ class UserManager {
                     </div>        
                 </div>
             <hr>
+            
+            <a id="dm_action" href="/home.html?dm=${memberObj?.id}">&#10149; Send Message</a>
+
            
             <div id="profile_roles">
                 <h2 class="profile_headline">Roles</h2>
@@ -573,36 +576,51 @@ class UserManager {
         customPrompts.showPrompt(
             "Login",
             `
-            <div style="width: 100%; float :left;">
-                <a id="doAccountLoginButton" style="
-                    margin-top: -5px; 
-                    margin-bottom: 60px;
-                    display: block; 
-                    float: left;
-                    font-size: 14px; 
-                    font-style: italic;
-                    text-align: left; 
-                    background-color: #F0F0F0;
-                    border-radius: 2px;
-                    padding: 6px 12px;
-                    color: #34383C;
-                    text-decoration: none;
-                    cursor: pointer;
-                    " 
-                onclick="UserManager.doAccountOnboarding();" >Need to register? Click here!</a>
+            
+            <div style="
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 40px;
+            ">
+                <div>
+                    <div class="prompt-form-group" id="loginNameContainer">
+                        <label class="prompt-label" for="loginName">Login name</label>
+                        <input class="prompt-input" type="text" name="loginName" onkeyup="UserManager.handleLoginNameInput(this)" id="loginName" placeholder="Enter login name" value="">
+                        <label style="color: indianred;" class="prompt-label error-text"></label>
+                    </div>
+                    <div class="prompt-form-group" id="passwordContainer" style="margin-bottom: 20px;">
+                        <label class="prompt-label" for="password">Password</label>
+                        <input class="prompt-input" type="password" name="password" id="password" placeholder="Enter password">
+                    </div>
+                </div>
+                
+                <div style="
+                    position: relative;
+                    border-bottom: 2px solid gray;
+                    width: 100%;
+                    display: flex;
+                    justify-content: center;
+                    z-index: 1;
+                ">
+                    <label style="
+                        position: absolute;
+                        background-color: rgb(36, 41, 46);
+                        color: #b1b1b1;
+                        padding: 0 10px;
+                        top: -10px;
+                        z-index: 2;
+                    ">
+                        or
+                    </label>      
+                </div>
+    
+                <div style="margin-bottom: 20px; cursor: pointer;">
+                    <a style="color: white; text-decoration: underline;" onclick="UserManager.doAccountOnboarding();" >Create new account</a>
+                </div>
             </div>
             
-            <div style="display: block;float: left; margin-right: 100px; margin-bottom: 20px;">
-                <div class="prompt-form-group" id="loginNameContainer">
-                    <label class="prompt-label" for="loginName">Login Name</label>
-                    <input class="prompt-input" type="text" name="loginName" onkeyup="UserManager.handleLoginNameInput(this)" id="loginName" placeholder="Enter login name" value="">
-                    <label style="color: indianred;" class="prompt-label error-text"></label>
-                </div>
-                <div class="prompt-form-group" id="passwordContainer">
-                    <label class="prompt-label" for="password">Password</label>
-                    <input class="prompt-input" type="password" name="password" id="password" placeholder="Enter password">
-                </div>
-            </div>
             `,
             async (values) => {
 
@@ -643,10 +661,17 @@ class UserManager {
                 }
 
                 customPrompts.closePrompt();
+            },
+            ["Login", null],
+            null,
+            null,
+            null,
+            (data) => {
+                if(data?.canceled){
+                    this.doAccountLogin()
+                }
             }
         );
-
-        applyHoverEffect(document.getElementById("doAccountLoginButton"), [["black", "gold"], ["black", "white"]])
     }
 
     static async showDonatorList(urlBase) {
@@ -656,6 +681,7 @@ class UserManager {
 
             let effect = null;
             let stopEffect;
+            let musicToken = 0;
 
             const txtUrl = `${urlBase}donators.txt?v=${this.generateId(5)}`;
             let mp3Url;
@@ -676,8 +702,7 @@ class UserManager {
             if (lines[0].startsWith("# ") && lines[0].includes(".mp3")) {
                 mp3Url = urlBase + lines[0].split(";")[0].replace("# ", "");
                 effect = lines[0].split(";")[1] || "confetti";
-                console.log("Music found!")
-                console.log(lines[1])
+
                 if (lines[1].startsWith("# ")) {
                     songName = lines[1].replace("# ", "");
                 }
@@ -794,12 +819,12 @@ class UserManager {
             `;
 
             customPrompts.showPrompt(
-                "Thanks to our Donators 💖",
+                "Thanks to our Donators ",
                 finalHTML,
                 () => {
                     manageMusic("fadeOut")
                 },
-                ["Nice <3", "#c2185b"],
+                ["<3", "#c2185b"],
                 null,
                 null,
                 null,
@@ -824,64 +849,61 @@ class UserManager {
                 if (!audio) return;
 
                 if (action === "stop") {
-                    stopEffect();
+                    musicToken++;
+                    if (stopEffect) stopEffect();
                     UserManager.isLoadingDonators = false;
-
                     audio.pause();
                     audio.currentTime = 0;
+                    audio.volume = 0;
+                    return;
                 }
 
-                if (action === "volume" && value != null) {
-                    audio.volume = value;
+                if (action === "play" && value != null) {
+                    const token = ++musicToken;
+                    return new Promise(async (resolve, reject) => {
+                        try {
+                            const targetVolume = Math.min(1, Math.max(0, value));
+                            audio.volume = 0;
+                            await audio.play();
+
+                            const fade = setInterval(() => {
+                                if (token !== musicToken) {
+                                    clearInterval(fade);
+                                    return;
+                                }
+                                if (audio.volume < targetVolume) {
+                                    audio.volume = Math.min(targetVolume, audio.volume + 0.05);
+                                } else {
+                                    clearInterval(fade);
+                                    resolve();
+                                }
+                            }, 100);
+                        } catch (e) {
+                            reject(e);
+                        }
+                    });
                 }
 
                 if (action === "fadeOut") {
-                    return new Promise((resolve) => {
-                        const fadeOutInterval = setInterval(() => {
+                    const token = ++musicToken;
+                    return new Promise(resolve => {
+                        const fade = setInterval(() => {
+                            if (token !== musicToken) {
+                                clearInterval(fade);
+                                return;
+                            }
                             if (audio.volume > 0.05) {
-                                audio.volume = Math.max(0, audio.volume - 0.05);
+                                audio.volume -= 0.05;
                             } else {
-                                clearInterval(fadeOutInterval);
+                                clearInterval(fade);
                                 manageMusic("stop");
                                 resolve();
                             }
                         }, 100);
                     });
                 }
-
-                if (action === "play" && value != null) {
-                    return new Promise(async (resolve, reject) => {
-                        const targetVolume = Math.min(1, Math.max(0, value)); // Clamp between 0–1
-                        audio.volume = 0;
-
-                        try {
-                            // Wait until audio is loaded enough to play
-                            if (audio.readyState < 2) {
-                                await new Promise((res) => {
-                                    audio.addEventListener("loadeddata", res, {once: true});
-                                });
-                            }
-
-                            // Try to play audio
-                            await audio.play();
-
-                            // Fade in
-                            const fadeInInterval = setInterval(() => {
-                                if (audio.volume < targetVolume) {
-                                    audio.volume = Math.min(targetVolume, audio.volume + 0.05);
-                                } else {
-                                    clearInterval(fadeInInterval);
-                                    resolve(); // Done fading in and playing
-                                }
-                            }, 100);
-                        } catch (err) {
-                            console.error("Audio failed to play:", err);
-                            reject(err);
-                        }
-                    });
-                }
-
             }
+
 
         } catch (err) {
             customAlerts.showAlert("error", "Could not load donator list: " + err.message);
@@ -914,7 +936,7 @@ class UserManager {
 
     static doAccountOnboarding(defaultValues = null) {
         customPrompts.showPrompt(
-            "Onboarding",
+            "Register Account",
             `
             <div style="width: 100%; float :left;">
                 <a id="doAccountOnBoardingLoginButton" style="
@@ -934,7 +956,7 @@ class UserManager {
             </div>
             
             <div id="tt_accountOnboardingUserDialog"> <!-- silly lil space helper -->
-                <div style="display: block;float: left; margin-right: 100px; margin-bottom: 20px;">
+                <div style="width: 100%;display: block;float: left; margin-right: 100px; margin-bottom: 20px;">
                     
                     <div class="prompt-form-group" id="usernameContainer">
                         <label class="prompt-label" for="username">Display Name</label>
@@ -1049,7 +1071,13 @@ class UserManager {
             null,
             () => {
                 doAccountOnboardingTooltip();
+            },
+            (data) => {
+                if(data?.canceled){
+                    this.doAccountOnboarding()
+                }
             }
+
         );
 
         applyHoverEffect(document.getElementById("doAccountOnBoardingLoginButton"), [["black", "gold"], ["black", "white"]])

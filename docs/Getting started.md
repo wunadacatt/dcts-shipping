@@ -2,8 +2,6 @@
 
 This document explains how to get started with the chat application and explain some concepts. If you ever need help you can make a post on [our subreddit](https://www.reddit.com/r/dcts/).
 
-[TOC]
-
 ------
 
 ## Requirements & Recommendations

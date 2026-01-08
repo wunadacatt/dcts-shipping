@@ -23,6 +23,9 @@
     margin: 10px auto;
 }
 
+.vc-row.participants .participant{
+    border: 2px solid hsl(from var(--main) h s calc(l * 8) / 20%);
+}
 .participant{
     display: flex;
     flex-direction: column;
@@ -30,7 +33,7 @@
     align-items: center;
     flex-wrap: wrap;
 
-    background-color:  hsl(from var(--main) h s calc(l * 1.25));
+    background-color:  hsl(from var(--main) h s calc(l * 1.5));
 
     padding: 20px 60px;
     border-radius: 6px;

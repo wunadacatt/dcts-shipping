@@ -9,8 +9,6 @@ export let powChallengeSessions = {}; // « save user challanges based on sessio
 
 export default (io) => (socket) => {
     // socket.on code here
-
-
 }
 
 export function listenToPow(socket) {

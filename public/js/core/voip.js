@@ -33,7 +33,7 @@ class VoIP {
         }
     }
 
-    async joinRoom(roomName, userName) {
+    async joinRoom(roomName, userName, memberId, channelId) {
         this.room = new LivekitClient.Room();
 
         this.room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, _publication, participant) => {
@@ -77,11 +77,16 @@ class VoIP {
         });
 
         try {
-            const token = await this.getToken(roomName, userName);
+            const token = await this.getToken(roomName, userName, memberId, channelId);
             await this.room.connect(this.LIVEKIT_URL, token);
 
             // local mic
-            const audioTrack = await LivekitClient.createLocalAudioTrack();
+            const audioTrack = await LivekitClient.createLocalAudioTrack({
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            });
+
             await this.room.localParticipant.publishTrack(audioTrack);
             this.room.localParticipant.setMicrophoneEnabled(true);
 
@@ -207,11 +212,11 @@ class VoIP {
         }
     }
 
-    async getToken(roomName, participantName) {
+    async getToken(roomName, participantName, memberId, channelId) {
         const response = await fetch(this.APPLICATION_SERVER_URL + "/token", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({roomName, participantName}),
+            body: JSON.stringify({roomName, participantName, memberId, channelId}),
         });
 
         if (!response.ok) {

@@ -1,9 +1,9 @@
 import { fs, serverconfig } from "../../index.mjs";
 import Logger from "../functions/logger.mjs";
 import { validateMemberId } from "../functions/main.mjs";
-import {Emoji} from "../../public/js/core/Emoji.js";
 import path from "path";
 const EMOJI_CONFIG_PATH = "./configs/emojis.json";
+import {Emoji} from "../functions/Emoji.mjs"
 
 function checkEmojiConfig(){
     const dir = path.dirname(EMOJI_CONFIG_PATH);

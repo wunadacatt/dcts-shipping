@@ -49,6 +49,13 @@ document.addEventListener("DOMContentLoaded", async event => {
             videoEl.controls = true;
             videoEl.setAttribute("data-member-id", participantId);
 
+            if(participantId === UserManager.getID()) {
+                mediaEl.muted = true;
+                videoEl.muted = true;
+                mediaEl.volume = 0;
+                videoEl.volume = 0;
+            }
+
             streamsContainer.appendChild(mediaEl);
             addVcMember(participantId)
             return;
@@ -138,6 +145,14 @@ document.addEventListener("DOMContentLoaded", async event => {
         removeVcMemberFromChannel(intChannelId, intMemberId)
     });
 });
+
+async function getVCMembers(channelId){
+    return new Promise((resolve, reject) => {
+        socket.emit('getVcChannelMembers', {id: UserManager.getID(), token: UserManager.getToken(), channelId},  async function (response) {
+            resolve(response);
+        });
+    })
+}
 
 let talking = new Map();
 function highlightUser(participantId) {
@@ -389,7 +404,6 @@ async function setupVC(roomId) {
     const channelIcons = document.getElementById("channelname-icons");
     let contentContainer = document.getElementById("content");
     channelIcons.innerHTML = "";
-
     contentContainer.innerHTML = `
         <div class="vc-container">
             <div class="vc-row participants">
@@ -401,7 +415,7 @@ async function setupVC(roomId) {
         </div>
     `;
 
-    addVcMember(UserManager.getID());
+    await addVcMember(UserManager.getID());
 
     if(!isInVc){
         document.querySelector("#vcStatusChannelname").innerText = "";
@@ -410,13 +424,24 @@ async function setupVC(roomId) {
             color: "darkorange"
         })
 
-        voip.joinRoom(roomId, UserManager.getID());
+        voip.joinRoom(roomId, UserManager.getID(), UserManager.getID(), UserManager.getChannel());
         connectedVcChannel = roomId;
         isInVc = true;
         toggleProfileQaIndicator(true);
     }
+    else{
+        let vcMembers = await getVCMembers(UserManager.getChannel());
+        if(!vcMembers?.error){
+            for(let memberId of vcMembers?.members){
+                addVcMember(memberId);
+            }
+        }
+        else{
+            console.error(vcMembers.error);
+        }
+    }
 
-    channelIcons.insertAdjacentHTML("beforeend", `<div class="screenshare icon" onclick="toggleScreenshare()"></div><div onclick="toggleMic();" class="muteMic icon"></div>`);
+    if(!channelIcons.querySelector(".screenshare.icon")) channelIcons.insertAdjacentHTML("beforeend", `<div class="screenshare icon" onclick="toggleScreenshare()"></div><div onclick="toggleMic();" class="muteMic icon"></div>`);
 
     setTimeout(() => {
         let vcContainer = document.querySelector(".vc-container");

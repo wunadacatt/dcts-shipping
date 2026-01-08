@@ -29,14 +29,11 @@ async function syncHosts(){
 }
 
 export function syncDiscoveredHosts(skipInterval){
-    if(skipInterval){
+    if(skipInterval) syncHosts();
+
+    setInterval(async ()=>{
         syncHosts();
-    }
-    else{
-        setInterval(async ()=>{
-            syncHosts();
-        }, 10 * 60_000) // 10 minutes
-    }
+    }, 10 * 60_000)
 }
 
 export async function getDiscoveredHosts(){

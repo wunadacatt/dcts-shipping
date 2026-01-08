@@ -29,11 +29,10 @@ body {
     overflow-anchor: none;
 }
 
- a {
+a {
     color: hsl(from var(--main) h s calc(l * 12));
     font-style: italic;
 }
-
 .message-container .content:hover{
     background-color: hsl(from var(--main) h s calc(l * 2.25))
 }
@@ -45,7 +44,8 @@ body {
 }
 
 #context-menu{
-    background: hsl(from var(--main) h s calc(l * 1) / 60%);
+    background: hsl(from var(--main) h s calc(l * 3) / 60%);
+    border: 1.5px solid hsl(from var(--main) h s calc(l * 10) / 20%);
 }
 
 .audio-player{
@@ -71,6 +71,10 @@ body {
     background-color: hsl(from var(--main) h s calc(l * 1.61));
 }
 
+#profile_content #dm_action{
+    color: hsl(from var(--main) h s calc(l * 10) / 100%);
+}
+
 #profile-qa {
     background-color: hsl(from var(--main) h s calc(l * 1.3));
 }
@@ -79,6 +83,10 @@ body {
 .ql-container,
 .ql-editor{
     background-color: hsl(from var(--main) h s calc(l * 1.5));
+}
+
+.ql-editor.ql-blank::before{
+    color: hsl(from var(--main) h s calc(l * 8)) !important;
 }
 
 .ql-editor * {
@@ -93,8 +101,12 @@ body {
     background-color: hsl(from var(--main) h s calc(l * 1.5));
 }
 
-#emoji-box-header-container, .emoji-box-header {
+#emoji-box-header-container{
     background-color: hsl(from var(--main) h s calc(l * 2.5));
+}
+
+#emoji-box-header-container .emoji-box-header {
+    background-color: hsl(from var(--main) h s calc(l * 4));
 }
 
 #emoji-box-container{
@@ -104,7 +116,7 @@ body {
 }
 
 .emoji-box-header:hover, .emoji-box-header.SelectedTab{
-    background-color: hsl(from var(--main) h s calc(l * 2));
+    background-color: hsl(from var(--main) h s calc(l * 1)) !important;
 }
 
 /* Server Home Page */
@@ -147,7 +159,7 @@ blockquote {
         Man i love css sometimes. the following two lines are just
         so amazing to me. works perfectly
      */
-    width: 100%;
+    width: fit-content;
     max-width: 500px;
     outline: none;
 }
@@ -162,6 +174,10 @@ p.note{
     font-style: italic;
 }
 
+.message-container .meta .timestamp{
+    color: hsl(from var(--main) h s calc(l * 12));
+}
+
 /* msg replies */
 .message-container .row.reply .box{
     border-left: 2px solid  hsl(from var(--main) h s calc(l * 8));
@@ -173,9 +189,111 @@ p.note{
 }
 
 .message-container .row.reply .content{
-    color: hsl(from var(--main) h s calc(l * 10));
+    color: hsl(from var(--main) h s calc(l * 12));
 }
 
 .message-container .content.highlight{
     background-color: hsl(from var(--main) h s calc(l * 3))
 }
+
+/* inbox */
+.headerIcon.inbox .inbox-container{
+    background-color: hsl(from var(--main) h s calc(l * 2.5) / 100%);
+    border-bottom: 1px solid hsl(from var(--main) h s calc(l * 10) / 20%);
+    border-left: 1px solid hsl(from var(--main) h s calc(l * 10) / 20%);
+}
+
+.headerIcon.inbox .inbox-container .entry{
+    background: linear-gradient(
+            90deg,
+            hsl(from var(--main) h s calc(l * 1.75) / 80%),
+            hsl(from var(--main) h s calc(l * 2) / 100%),
+            hsl(from var(--main) h s calc(l * 1.75) / 80%)
+    );
+}
+
+.headerIcon.inbox .inbox-content .entry .content .headline *{
+    color: hsl(from var(--main) h s calc(l * 12) / 100%);
+}
+.headerIcon.inbox .inbox-content .entry .content .headline .avatar{
+    border: 1px solid hsl(from var(--main) h s calc(l * 10) / 40%);
+}
+.headerIcon.inbox .inbox-content .entry p{
+    color: hsl(from var(--main) h s calc(l * 10));
+}
+
+#profile_content #dm_action{
+    background-color: hsl(from var(--main) h s calc(l * 5));
+}
+
+/* json editor */
+.json-editor-setting {
+    background-color: hsl(from var(--main) h s calc(l * 3));
+    padding: 8px;
+    border-radius: 6px;
+    border: 0.5px solid hsl(from var(--main) h s calc(l * 10) / 20%);
+}
+.json-editor-setting hr{
+    display: none;
+}
+.json-editor-setting .json-editor-setting-headline{
+    color: hsl(from var(--main) h s calc(l * 10) / 100%);
+    font-size: 14px;
+    margin-top: 0;
+    margin-bottom: 4px;
+}
+.json-editor-setting .json-editor-setting-description{
+    color: hsl(from var(--main) h s calc(l * 8) / 100%);
+    font-size: 12px;
+}
+
+.json-editor-setting input,
+.json-editor-setting button{
+    outline: none;
+    padding: 4px;
+    border-radius: 4px;
+    background-color: hsl(from var(--main) h s calc(l * 4) / 100%);
+    color: hsl(from var(--main) h s calc(l * 10) / 100%);
+    border: 2px solid hsl(from var(--main) h s calc(l * 10) / 20%);
+    cursor: pointer;
+}
+
+
+/* settings popup helper */
+.settings-save-container.shown {
+    opacity: 1;
+}
+.settings-save-container {
+    opacity: 0;
+    position: absolute;
+    z-index: 10;
+    width: 80%;
+    height: fit-content;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    background-color: hsl(from var(--main) h s calc(l * 6) / 40%);
+    border: 0.5px solid hsl(from var(--main) h s calc(l * 10) / 20%);
+    backdrop-filter: blur(10px);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    margin: auto;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+
+    box-shadow: 0 0 20px 10px hsl(from var(--main) h s calc(l * 6) / 10%);
+    font-weight: bold;
+    color: hsl(from var(--main) h s calc(l * 10) / 100%);
+}
+
+.settings-save-container:hover {
+    background-color: hsl(from var(--main) h s calc(l * 6) / 55%);
+}
+

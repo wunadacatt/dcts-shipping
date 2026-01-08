@@ -3,7 +3,7 @@
     flex-direction: column;
 
     padding: 4px;
-    z-index: 9999 !important;
+    z-index: 20 !important;
 
     width: 300px;
     height: auto;
@@ -11,12 +11,15 @@
 
     background-color: hsl(from var(--main) h s calc(l * 2));
     border: 2px solid hsl(from var(--main) h s calc(l * 4));
-    color: hsl(from var(--main) h s calc(l * 12));
     position: absolute;
 }
 
+#profile_container * {
+    color: hsl(from var(--main) h s calc(l * 10) / 100%) !important;
+}
+
 #profile-role-menu{
-    z-index: 99999 !important;
+    z-index: 21 !important;
 }
 
 #profile_banner{
@@ -45,11 +48,14 @@
     margin-left: 20px !important;
 
     border-radius: 50%;
-    border: 2px solid black;
+    outline: 6px solid hsl(from var(--main) h s calc(l * 2) / 100%);
+    outline-offset: 0;
+
+    background-color: black;
 
     background-size: cover;
+    background-repeat: no-repeat;
     object-fit: cover;
-    background-color: #202225;
     background-position: center center;
 }
 
@@ -93,6 +99,19 @@
     display: flex;
     flex-direction: column;
     padding: 0 24px 24px 24px;
+}
+
+#profile_content #dm_action{
+    display: flex;
+    justify-content: center;
+
+    margin: 0 0 20px 0;
+    padding: 4px;
+    border-radius: 4px;
+
+    text-decoration: none;
+    font-style: normal;
+    font-weight: bold;
 }
 
 #profile_username {

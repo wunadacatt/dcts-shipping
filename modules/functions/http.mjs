@@ -1,7 +1,54 @@
 import {server, serverconfig, http, https, app, setServer, fs, saveConfig} from "../../index.mjs";
 import Logger from "./logger.mjs";
+import {lookupIP} from "./chat/main.mjs";
 
 var serverconfigEditable = serverconfig;
+
+function getClientIp(req) {
+    const xf = req.headers["x-forwarded-for"];
+    if (xf) return xf.split(",")[0].trim();
+
+    return req.socket?.remoteAddress || req.connection?.remoteAddress;
+}
+
+
+export function checkIP(){
+    app.use(async (req, res, next) => {
+        const ipInfo = await lookupIP(getClientIp(req));
+        if (!ipInfo) return next();
+
+        // whitelist some urls for functionality
+        let reqPath = req.path;
+        let whitelistedUrls = [
+            "/discover"
+        ];
+
+        // allow the discovery url for "datacenters" aka other instances trying to look up our instance
+        if(whitelistedUrls.includes(reqPath) && ipInfo.is_datacenter) return next();
+
+        // let whitelisted ips pass
+        if(serverconfig.serverinfo.moderation.ip.whitelist.includes(ipInfo.ip)) return next();
+
+        // looking kinda beautiful
+        if (ipInfo.is_bogon && serverconfig.serverinfo.moderation.ip.blockBogon) return res.sendStatus(403);
+        if (ipInfo.is_datacenter && serverconfig.serverinfo.moderation.ip.blockDataCenter) return res.sendStatus(403);
+        if (ipInfo.is_satellite && serverconfig.serverinfo.moderation.ip.blockSatellite) return res.sendStatus(403);
+        if (ipInfo.is_crawler && serverconfig.serverinfo.moderation.ip.blockCrawler) return res.sendStatus(403);
+        if (ipInfo.is_proxy && serverconfig.serverinfo.moderation.ip.blockProxy) return res.sendStatus(403);
+        if (ipInfo.is_vpn && serverconfig.serverinfo.moderation.ip.blockVPN) return res.sendStatus(403);
+        if (ipInfo.is_tor && serverconfig.serverinfo.moderation.ip.blockTor) return res.sendStatus(403);
+        if (ipInfo.is_abuser && serverconfig.serverinfo.moderation.ip.blockAbuser) return res.sendStatus(403);
+
+        if (
+            ipInfo.location?.country_code &&
+            serverconfig.serverinfo.moderation.ip.blockedCountryCodes
+                .includes(ipInfo.location.country_code.toLowerCase())
+        ) return res.sendStatus(403);
+
+        // continue
+        next();
+    });
+}
 
 export function checkSSL(){
     // if ssl is disabled but the file exists, enable ssl and delete the file

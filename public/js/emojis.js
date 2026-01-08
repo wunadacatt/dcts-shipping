@@ -176,13 +176,65 @@ function extractEmojiDetails(emojiObj) {
 function isOnlyText(html) {
     const temp = document.createElement("div");
     temp.innerHTML = html;
-    let text = temp.textContent || "";
-    text = text.replace(/\s+/g, "").replace(/:([a-fA-F0-9]+):/g, "");
-    return text.length === 0;
+
+    const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+    let out = "";
+    for (const { segment } of segmenter.segment(temp.textContent || "")) {
+        const isEmoji =
+            /\p{Extended_Pictographic}/u.test(segment) ||
+            /\p{Regional_Indicator}{2}/u.test(segment) ||
+            /\p{Emoji_Presentation}/u.test(segment);
+
+        if (!isEmoji) out += segment;
+    }
+
+    out = out.replace(/\s+/g, "").replace(/:([a-fA-F0-9]+):/g, "");
+    return out.length === 0;
 }
 
+
+function emojiCodeToImg(str) {
+    if (!str) return str;
+
+    const tags = [];
+    str = str.replace(/<[^>]+>/g, m => {
+        tags.push(m);
+        return `__TAG_${tags.length - 1}__`;
+    });
+
+    const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+    let out = "";
+
+    for (const { segment } of segmenter.segment(str)) {
+        const isEmoji =
+            /\p{Extended_Pictographic}/u.test(segment) ||
+            /\p{Regional_Indicator}{2}/u.test(segment) ||
+            /\p{Emoji_Presentation}/u.test(segment);
+
+        if (isEmoji) {
+            const file = Array.from(segment)
+                .map(c => c.codePointAt(0).toString(16).toLowerCase())
+                .join("-") + ".svg";
+
+            const big = isOnlyText(str) ? "big" : "";
+            out += `<img src="/img/default_emojis/${file}" alt="${segment}" class="inline-text-emoji ${big} default">`;
+        } else {
+            out += segment;
+        }
+    }
+
+    return out.replace(/__TAG_(\d+)__/g, (_, i) => tags[i]);
+}
+
+
+
+
+
 async function text2Emoji(text, returnCodeOnly = false, forceSmall = false) {
-    const replacedText = text.replace(/:([a-fA-F0-9]+):/g, (match, emojiId) => {
+    text = emojiCodeToImg(text);
+
+    let replacedText = text.replace(/:([a-fA-F0-9]+):/g, (match, emojiId) => {
         const emojiObject = findEmojiByID(emojiId);
         if (emojiObject) {
             const emojiName = String(emojiObject.filename.split("_")[1].split(".")[0]);
@@ -193,7 +245,6 @@ async function text2Emoji(text, returnCodeOnly = false, forceSmall = false) {
         }
         return match;
     });
-
     return replacedText;
 }
 
