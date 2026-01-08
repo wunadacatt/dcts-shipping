@@ -152,6 +152,11 @@ export function checkServerDirectories() {
         fs.mkdirSync("./plugins");
     }
 
+    // configs folder
+    if (!fs.existsSync("./configs")) {
+        fs.mkdirSync("./configs");
+    }
+
     // backup folder
     if (!fs.existsSync("./backups")) {
         fs.mkdirSync("./backups");
@@ -181,27 +186,27 @@ export function checkConfigFile() {
             consolas("Config file config.json did exist".yellow, "Debug");
         }
         else {
-            consolas("Config file config.json didnt exist.".yellow, "Debug");
-            consolas("Checking for template file...".yellow, "Debug");
+            Logger.warn("Config file config.json didnt exist.".yellow, "Debug");
+            Logger.warn("Checking for template file...".yellow, "Debug");
 
             // config.json didnt exist. Does template config exist?
             if (checkFile("./config.example.json") === true) {
 
-                consolas("Trying to copy template file".yellow, "Debug");
+                Logger.warn("Trying to copy template file".yellow, "Debug");
 
                 // Trying to copy file
                 try {
                     fs.copyFileSync("./config.example.json", configPath);
-                    consolas(" ", "Debug");
-                    consolas("Successfully copied config.example.json to config.json".green, "Debug");
+                    Logger.success("Successfully copied config.example.json to config.json".green, "Debug");
                 }
                 catch (error) {
-                    consolas("Coudlnt copy template file ".red + colors.red(error), "Debug");
+                    Logger.error("Coudlnt copy template file ".red + colors.red(error), "Debug");
+                    process.exit();
                 }
             }
             else {
-                consolas("Neither the config.json file nor the config.example.json file were found.".red, "Debug");
-                consolas("Server was terminated.".red, "Debug");
+                Logger.error("Neither the config.json file nor the config.example.json file were found.".red, "Debug");
+                Logger.error("Server was terminated.".red, "Debug");
                 process.exit();
             }
         }
