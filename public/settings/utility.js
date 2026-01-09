@@ -1,5 +1,10 @@
-var socket = io.connect();
-let customPrompts = new Prompt();
+let socket;
+let customPrompts;
+
+document.addEventListener("DOMContentLoaded", () => {
+    socket = io.connect();
+    customPrompts = new Prompt();
+})
 
 
 
@@ -105,6 +110,27 @@ async function loadPageContent(page = "server-info") {
     setUrl(`?page=${page}`)
 }
 
+function setUrl(param) {
+    const url = new URL(window.location.href);
+
+    const params = new URLSearchParams(param.startsWith("?") ? param.slice(1) : param);
+
+    for (const [key, value] of params.entries()) {
+        url.searchParams.set(key, value);
+    }
+
+    window.history.replaceState(null, "", url.pathname + "?" + url.searchParams.toString());
+}
+
+function getUrlParams(param) {
+    var url = window.location.search;
+    var urlParams = new URLSearchParams(url);
+    var urlChannel = urlParams.get(param);
+
+    return urlChannel;
+}
+
+
 async function showSaveSettings(callback, text = "Unsaved Settings!") {
     if(!callback) throw new Error("No callback provided");
 
@@ -156,10 +182,6 @@ function closeSettingsPrompt(){
     setTimeout(() => {
         settingsContainer.remove();
     }, 200);
-}
-
-function setUrl(param) {
-    window.history.replaceState(null, null, param); // or pushState
 }
 
 

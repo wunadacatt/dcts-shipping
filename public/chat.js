@@ -2034,11 +2034,10 @@ async function getServerInfo(returnData = false) {
         //Official <span style="font-weight: bold; color: skyblue;">DCTS <span style="font-weight: bold; color: cadetblue;">Community</span></span>
         socket.emit("getServerInfo", {id: UserManager.getID(), token: UserManager.getToken()}, async function (response) {
             if(returnData) return resolve(response);
-
             var headline = document.getElementById("header");
 
-            servername = response.name;
-            serverdesc = response.description;
+            servername = response.serverinfo.name;
+            serverdesc = response.serverinfo.description;
 
             headline.innerHTML = `
 
