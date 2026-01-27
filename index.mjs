@@ -11,10 +11,22 @@ import http from "http";
 import fs from "fs";
 import fse from "fs-extra"; // Use fs-extra for easy directory copying
 import path from "path";
-import mysql from "mysql2/promise";
 import sanitizeHtml from "sanitize-html";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+
+import Logger from "@hackthedev/terminal-logger"
+import dSyncSql from "@hackthedev/dsync-sql"
+import ArrayTools from "@hackthedev/arraytools"
+import dSyncIPSec from "@hackthedev/dsync-ipsec"
+import dSyncRateLimit from "@hackthedev/dsync-ratelimit"
+//import dSyncFiles from "@hackthedev/dsync-files";
+
+//import DateTools from "/mnt/SSD/network-z-dev/date-tools/index.mjs"
+//console.log(DateTools.formatDate(DateTools.getDateFromOffset("1 day")))
+//console.log(DateTools.getReadableDuration(DateTools.getDateFromOffset("1 day")));
+
+//import dSyncIPSec from "/mnt/SSD/network-z-dev/dSyncIPSec/index.mjs"
 
 // Depending on the SSL setting, this will switch.
 export let server; // = http.createServer(app);
@@ -44,7 +56,6 @@ export {
     fs,
     fse,
     path,
-    mysql,
     sanitizeHtml,
     bcrypt,
     FormData,
@@ -57,7 +68,6 @@ export {
     crypto,
 };
 
-import Logger from "./modules/functions/logger.mjs";
 
 export let checkedMediaCacheUrls = {};
 export let usersocket = [];
@@ -91,8 +101,6 @@ export const auther = new dSyncAuth(app, signer, async function (data) {
         changeKeyVerification(data.publicKey, data.valid);
     }
 });
-
-export let pool = null;
 
 // config file saving
 let fileHandle = null; // File handle for the config file
@@ -167,7 +175,7 @@ if (fs.existsSync("./configs/sql.txt")) {
 }
 
 // create sql pool
-pool = mysql.createPool({
+export let db = new dSyncSql({
     host: process.env.DB_HOST || serverconfig.serverinfo.sql.host,
     user: process.env.DB_USER || serverconfig.serverinfo.sql.username,
     password: process.env.DB_PASS || serverconfig.serverinfo.sql.password,
@@ -175,12 +183,6 @@ pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: serverconfig.serverinfo.sql.connectionLimit,
     queueLimit: 0,
-    typeCast: function (field, next) {
-        if (field.type === "TINY" && field.length === 1) {
-            return field.string() === "1";
-        }
-        return next();
-    },
 });
 
 // overwrites for docker
@@ -194,23 +196,11 @@ if (process.env.DB_NAME)
 serverconfig.serverinfo.sql.enabled = true;
 saveConfig(serverconfig);
 
-async function waitForDB() {
-    while (true) {
-        try {
-            let conn = await pool.getConnection();
-            await conn.ping();
-            conn.release();
-            return;
-        } catch {
-            await new Promise((r) => setTimeout(r, 1000));
-        }
-    }
-}
 
 Logger.info("Checking and waiting for database connection...");
 Logger.info("If it takes too long check the data inside the config.json file");
 Logger.info("and make sure the database is running and accessible.");
-await waitForDB();
+await db.waitForConnection();
 Logger.success("Connection established!");
 Logger.space();
 
@@ -827,7 +817,7 @@ if (checkVer != null) {
 }
 
 // Check if SSL is used or not
-checkSSL();
+server = http.createServer(app)
 
 // Catch uncaught errors
 process.on("uncaughtException", function (err) {
@@ -874,22 +864,22 @@ app.use(
     })
 );
 
-(async () => {
-    for (const table of tables) {
-        await checkAndCreateTable(table);
-    }
+export let ipsec = new dSyncIPSec();
+ipsec.updateRule({
+    blockBogon: serverconfig.serverinfo.moderation.ip.blockBogon,
+    blockSatelite: serverconfig.serverinfo.moderation.ip.blockSatelite,
+    blockCrawler: serverconfig.serverinfo.moderation.ip.blockCrawler,
+    blockProxy: serverconfig.serverinfo.moderation.ip.blockProxy,
+    blockVPN: serverconfig.serverinfo.moderation.ip.blockVPN,
+    blockTor: serverconfig.serverinfo.moderation.ip.blockTor,
+    blockAbuser: serverconfig.serverinfo.moderation.ip.blockAbuser,
 
-    await loadMembersFromDB();
+    whitelistedUrls: serverconfig.serverinfo.moderation.ip.urlWhitelist,
+    whitelistedIps: serverconfig.serverinfo.moderation.ip.whitelist,
+    blacklistedIps: serverconfig.serverinfo.moderation.ip.blacklist,
+    companyDomainWhitelist: serverconfig.serverinfo.moderation.ip.companyDomainWhitelist,
+});
 
-    // after the tables exist etc we will fire up our awesome new job(s)
-    scheduleDbTasks(dbTasks);
-
-    checkMigrations();
-    checkIP()
-    startServer();
-})();
-
-// Setup socket.io
 export const io = new Server(server, {
     maxHttpBufferSize: 1e8,
     secure: true,
@@ -901,6 +891,22 @@ export const io = new Server(server, {
         credentials: false,
     },
 });
+
+(async () => {
+    for (const table of tables) {
+        await db.checkAndCreateTable(table);
+    }
+
+    await loadMembersFromDB();
+
+    // after the tables exist etc we will fire up our awesome new job(s)
+    scheduleDbTasks(dbTasks);
+
+    await checkMigrations();
+    await ipsec.filterExpressTraffic(app)
+    startServer();
+})();
+
 
 export function startServer() {
     // Start the app server

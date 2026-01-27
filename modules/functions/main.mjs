@@ -612,8 +612,9 @@ export function checkConfigAdditions() {
     // new cool ip block shit
     checkObjectKeys(serverconfig, "serverinfo.moderation.ip.urlWhitelist",
         [
-            /^\/discover(\/.*)?$/,
-            /^\/uploads(\/.*)?$/
+            "/^\/discover(\/.*)?$/",
+            "/^\/uploads(\/.*)?$/",
+            "/^\/emojis(\/.*)?$/"
         ]
     )
     checkObjectKeys(serverconfig, "serverinfo.moderation.ip.companyDomainWhitelist", [])
@@ -1326,7 +1327,7 @@ export function anonymizeMessage(message, hideContentForMembers = false, isAdmin
 }
 
 export function setMemberObjColor(member){
-    let highestRole = getMemberHighestRole(member?.id);
+    let highestRole = getMemberHighestRole(member?.author?.id || member?.id);
     if(highestRole){
         member.color = highestRole?.info?.color;
     }

@@ -8,9 +8,11 @@
         "@hackthedev/arraytools": "^1.0.0",
         "@hackthedev/dsync": "^1.0.8",
         "@hackthedev/dsync-auth": "^1.0.7",
+        "@hackthedev/dsync-files": "^1.0.0",
         "@hackthedev/dsync-ipsec": "^1.0.1",
+        "@hackthedev/dsync-ratelimit": "^1.0.1",
         "@hackthedev/dsync-sign": "^1.0.10",
-        "@hackthedev/dsync-sql": "1.0.3",
+        "@hackthedev/dsync-sql": "^1.0.6",
         "@hackthedev/terminal-logger": "^1.0.0",
         "archiver": "^7.0.1",
         "bcrypt": "^6.0.0",
@@ -52,11 +54,15 @@
 
     "@hackthedev/dsync-auth": ["@hackthedev/dsync-auth@1.0.8", "", { "dependencies": { "@hackthedev/dsync-sign": "^1.0.2", "express": "^5.1.0" } }, "sha512-edmppCm0L9oKi716is6Wbu3058nHOFk4e5uWSsw7gXJ9kyMyog1iRymmXScM37s4RrTUw2WMJzIaSIOrfWuKVw=="],
 
+    "@hackthedev/dsync-files": ["@hackthedev/dsync-files@1.0.0", "", {}, "sha512-qR9yg6otAWHLRbYuGVQopfqi2MMOmluFzwjceivHlDjt3g1V7HiZALM7/1A8jlz469+D+OpK0BLhbW5DR0Zy4Q=="],
+
     "@hackthedev/dsync-ipsec": ["@hackthedev/dsync-ipsec@1.0.1", "", {}, "sha512-KkmckbsyXY/CXnB0Ygh+GsXEKC//3/5ihJANPd9Nd9xmd6kr/lShS3K41ExpdgbTSIroK6RpbPqPGGCqjPWBBg=="],
+
+    "@hackthedev/dsync-ratelimit": ["@hackthedev/dsync-ratelimit@1.0.1", "", { "dependencies": { "@hackthedev/arraytools": "^1.0.1", "@hackthedev/dsync-ipsec": "^1.0.1" } }, "sha512-DvvFxlf+33JmjMuC4vaL3WKxEq2kdXmN8PjVnvRQAWXdofDpqAXptn7yScFOJfDw853cFsuhYaYaN5+ziZBWFA=="],
 
     "@hackthedev/dsync-sign": ["@hackthedev/dsync-sign@1.0.10", "", {}, "sha512-+i51CDgw+nf5e5SsnOz7pYAiraaU6VqMxs5GDzkLAmkmjRVGF9G3fzprccJQE4bPz8kve8/SzYBQy0Gfgyqu5w=="],
 
-    "@hackthedev/dsync-sql": ["@hackthedev/dsync-sql@1.0.3", "", { "dependencies": { "@hackthedev/terminal-logger": "^1.0.0", "mysql2": "^3.16.0", "mysql2-promise": "^0.1.4" } }, "sha512-rm86gL0NeRKz5uwwQV3/fm5hzgbaD+cnHZgGZRMGmr/AdHKIXrJ89A6bx2HQ0LvIzlZu8wfhg1AgkrtY3PYprA=="],
+    "@hackthedev/dsync-sql": ["@hackthedev/dsync-sql@1.0.6", "", { "dependencies": { "@hackthedev/terminal-logger": "^1.0.0", "mysql2": "^3.16.0", "mysql2-promise": "^0.1.4" } }, "sha512-D2P7xdUczDQxz57ww2GIyt2wHRWlg5sDamcEUMCG35dARumxUFdecbv5XcuMfOVy2JRAIYglwG2WmXsQQUwtJA=="],
 
     "@hackthedev/terminal-logger": ["@hackthedev/terminal-logger@1.0.0", "", {}, "sha512-n2SiSpJXCCbFJwgyzR94aDkgelTsK0CG7Ruh6W0n05D5oAm8wZz8F1+0SCJISf2L0/lhTD39zeNxGRVYse8EKA=="],
 
@@ -565,6 +571,8 @@
     "@hackthedev/dsync/express": ["express@5.2.1", "", { "dependencies": { "accepts": "^2.0.0", "body-parser": "^2.2.1", "content-disposition": "^1.0.0", "content-type": "^1.0.5", "cookie": "^0.7.1", "cookie-signature": "^1.2.1", "debug": "^4.4.0", "depd": "^2.0.0", "encodeurl": "^2.0.0", "escape-html": "^1.0.3", "etag": "^1.8.1", "finalhandler": "^2.1.0", "fresh": "^2.0.0", "http-errors": "^2.0.0", "merge-descriptors": "^2.0.0", "mime-types": "^3.0.0", "on-finished": "^2.4.1", "once": "^1.4.0", "parseurl": "^1.3.3", "proxy-addr": "^2.0.7", "qs": "^6.14.0", "range-parser": "^1.2.1", "router": "^2.2.0", "send": "^1.1.0", "serve-static": "^2.2.0", "statuses": "^2.0.1", "type-is": "^2.0.1", "vary": "^1.1.2" } }, "sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw=="],
 
     "@hackthedev/dsync-auth/express": ["express@5.2.1", "", { "dependencies": { "accepts": "^2.0.0", "body-parser": "^2.2.1", "content-disposition": "^1.0.0", "content-type": "^1.0.5", "cookie": "^0.7.1", "cookie-signature": "^1.2.1", "debug": "^4.4.0", "depd": "^2.0.0", "encodeurl": "^2.0.0", "escape-html": "^1.0.3", "etag": "^1.8.1", "finalhandler": "^2.1.0", "fresh": "^2.0.0", "http-errors": "^2.0.0", "merge-descriptors": "^2.0.0", "mime-types": "^3.0.0", "on-finished": "^2.4.1", "once": "^1.4.0", "parseurl": "^1.3.3", "proxy-addr": "^2.0.7", "qs": "^6.14.0", "range-parser": "^1.2.1", "router": "^2.2.0", "send": "^1.1.0", "serve-static": "^2.2.0", "statuses": "^2.0.1", "type-is": "^2.0.1", "vary": "^1.1.2" } }, "sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw=="],
+
+    "@hackthedev/dsync-ratelimit/@hackthedev/arraytools": ["@hackthedev/arraytools@1.0.2", "", {}, "sha512-rFr3L60vAqp6bs+ur2W3VqaavOzoyQxDFqGYU/R+ocgZ63Hh4nat7HRZOVqZ6BVHC/UuC4Q/Y8+BiX9i3xakkg=="],
 
     "accepts/mime-types": ["mime-types@2.1.35", "", { "dependencies": { "mime-db": "1.52.0" } }, "sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw=="],
 

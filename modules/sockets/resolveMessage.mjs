@@ -55,7 +55,6 @@ export function checkMessageObjAuthor(message){
     if(!message?.author?.name){
         message.author = getCastingMemberObject(serverconfig.servermembers[message.author.id]);
     }
-
     return message;
 }
 
