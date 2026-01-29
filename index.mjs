@@ -445,7 +445,22 @@ const tables = [
             {name: "data", type: "longtext NOT NULL"},
             {name: "last_sync", type: "bigint NOT NULL DEFAULT (UNIX_TIMESTAMP() * 1000)"}
         ],
-        keys: [{name: "UNIQUE KEY", type: "ip (ip)"}],
+        keys: [
+            {name: "PRIMARY KEY", type: "(reactionId)"},
+            {name: "UNIQUE KEY", type: "ip (ip)"}]
+        ,
+    },
+    {
+        name: "cache",
+        columns: [
+            {name: "rowId", type: "int(12) NOT NULL AUTO_INCREMENT PRIMARY KEY"},
+            {name: "identifier", type: "varchar(255) NOT NULL"},
+            {name: "data", type: "longtext NOT NULL"},
+            {name: "last_update", type: "bigint NOT NULL DEFAULT (UNIX_TIMESTAMP() * 1000)"}
+        ],
+        keys: [
+            {name: "UNIQUE KEY", type: "identifier (identifier)"}
+        ],
     },
     {
         name: "migrations",
@@ -470,8 +485,6 @@ const tables = [
             },
         ],
         keys: [
-
-
             {name: "UNIQUE KEY", type: "inboxId (inboxId)"},
             {name: "UNIQUE KEY", type: "customId (customId)"},
         ],
@@ -710,7 +723,7 @@ const tables = [
     {
         name: "members",
         columns: [
-            {name: "rowId", type: "int(11) NOT NULL DEFAULT 0" },
+            {name: "rowId", type: "int(11) NOT NULL AUTO_INCREMENT" },
             {name: "id", type: "varchar(100) NOT NULL UNIQUE"},
             {name: "token", type: "varchar(255)"},
             {name: "onboarding", type: "BOOLEAN DEFAULT FALSE"},
@@ -734,6 +747,7 @@ const tables = [
         ],
         keys: [
             {name: "PRIMARY KEY", type: "(rowId)"},
+            {name: "UNIQUE KEY", type: "(id)"},
         ],
         autoIncrement: "rowId int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1",
     },
@@ -905,6 +919,8 @@ export const io = new Server(server, {
     await checkMigrations();
     await ipsec.filterExpressTraffic(app)
     startServer();
+
+    listenToIO();
 })();
 
 
@@ -1111,51 +1127,53 @@ export async function checkPow(socket) {
     }
 }
 
-io.on("connection", async function (socket) {
-    // socket ip
-    var ip = getSocketIp(socket);
-    if (serverconfig.banlist[ip]) {
-        socket.disconnect(true);
-    }
 
-    registerSocketEvents(socket);
-
-    socket.on("disconnect", () => {
-        //Logger.info(`Socket ${socket.id} disconnected, cleaning up handlers...`);
-        if (activeSockets.has(socket.id)) {
-            activeSockets.get(socket.id).forEach((cleanup) => cleanup());
-            activeSockets.delete(socket.id); // Remove socket entry
+async function listenToIO(){
+    io.on("connection", async function (socket) {
+        // socket ip
+        var ip = getSocketIp(socket);
+        if (serverconfig.banlist[ip]) {
+            socket.disconnect(true);
         }
 
-        // clean up stuff
-        try {
-            removeFromArray(powVerifiedUsers, socket.id);
-        } catch (cleanupError) {
-            Logger.error(cleanupError);
-        }
-    });
+        registerSocketEvents(socket);
 
-    // Check if user ip is blacklisted
-    socketToIP[socket] = ip;
-    if (serverconfig.ipblacklist.hasOwnProperty(ip)) {
-        if (Date.now() <= serverconfig.ipblacklist[ip]) {
-            let detailText = "";
-            let banListResult = findInJson(serverconfig.banlist, "ip", ip);
-            if (banListResult != null) {
-                let bannedUntilDate = new Date(banListResult.until);
-                bannedUntilDate.getFullYear() === "9999"
-                    ? (detailText = "permanently banned")
-                    : (detailText = `banned until: <br>${formatDateTime(bannedUntilDate)}`);
-                detailText +=
-                    banListResult?.reason !== null
-                        ? `<br><br>Reason:<br>${banListResult.reason}`
-                        : "";
+        socket.on("disconnect", () => {
+            //Logger.info(`Socket ${socket.id} disconnected, cleaning up handlers...`);
+            if (activeSockets.has(socket.id)) {
+                activeSockets.get(socket.id).forEach((cleanup) => cleanup());
+                activeSockets.delete(socket.id); // Remove socket entry
             }
 
-            sendMessageToUser(
-                socket.id,
-                JSON.parse(
-                    `{
+            // clean up stuff
+            try {
+                removeFromArray(powVerifiedUsers, socket.id);
+            } catch (cleanupError) {
+                Logger.error(cleanupError);
+            }
+        });
+
+        // Check if user ip is blacklisted
+        socketToIP[socket] = ip;
+        if (serverconfig.ipblacklist.hasOwnProperty(ip)) {
+            if (Date.now() <= serverconfig.ipblacklist[ip]) {
+                let detailText = "";
+                let banListResult = findInJson(serverconfig.banlist, "ip", ip);
+                if (banListResult != null) {
+                    let bannedUntilDate = new Date(banListResult.until);
+                    bannedUntilDate.getFullYear() === "9999"
+                        ? (detailText = "permanently banned")
+                        : (detailText = `banned until: <br>${formatDateTime(bannedUntilDate)}`);
+                    detailText +=
+                        banListResult?.reason !== null
+                            ? `<br><br>Reason:<br>${banListResult.reason}`
+                            : "";
+                }
+
+                sendMessageToUser(
+                    socket.id,
+                    JSON.parse(
+                        `{
                             "title": "IP Blacklisted ${ip}",
                             "message": "Your IP Address was ${detailText || "banned"}",
                             "buttons": {
@@ -1167,17 +1185,18 @@ io.on("connection", async function (socket) {
                             "type": "error",
                             "displayTime": 60000
                         }`,
-                ),
-            );
+                    ),
+                );
 
-            socket.disconnect();
+                socket.disconnect();
 
-            Logger.debug("Disconnected user because ip is blacklisted");
-        } else if (Date.now() > serverconfig.ipblacklist[ip]) {
-            unbanIp(socket);
+                Logger.debug("Disconnected user because ip is blacklisted");
+            } else if (Date.now() > serverconfig.ipblacklist[ip]) {
+                unbanIp(socket);
+            }
         }
-    }
-});
+    });
+}
 
 function initConfig(filePath) {
     try {

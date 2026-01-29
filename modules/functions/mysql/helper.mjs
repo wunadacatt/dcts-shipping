@@ -11,14 +11,13 @@ export async function saveMemberToDB(id, data) {
     const vals = Object.values(data);
     const placeholders = cols.map(() => "?").join(",");
 
-    const sql = `REPLACE
-    INTO members (
-    ${cols.join(",")}
-    )
-    VALUES
-    (
-    ${placeholders}
-    )`;
+    const sql = `
+        INSERT INTO members (${cols.join(",")})
+        VALUES (${placeholders})
+            ON DUPLICATE KEY UPDATE
+                                 ${cols.map(c => `${c}=VALUES(${c})`).join(",")}
+    `;
+
 
     try {
         await queryDatabase(sql, vals);

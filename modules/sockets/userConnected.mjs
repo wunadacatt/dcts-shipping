@@ -41,6 +41,7 @@ import logger from "../functions/logger.mjs";
 import {channel} from "node:diagnostics_channel";
 import {saveMemberToDB} from "../functions/mysql/helper.mjs";
 import {runInWorker} from "../functions/offload.mjs";
+import {listThemes, loadThemeCache} from "./routes/themes.mjs";
 
 function normaliseString(v) {
     if (v === null || v === undefined) return "";
@@ -290,7 +291,7 @@ export default (io) => (socket) => {
             await saveConfig(serverconfig);
         }
 
-        if (member.id.length === 12 && isNaN(member.id) === false) {
+        if (member.id.length === 12) {
             usersocket[member.id] = socket.id; // deprecated, left for legacy
 
             // if new member
@@ -325,6 +326,7 @@ export default (io) => (socket) => {
                     "*.id",
                     "*.loginName",
                 ]);
+
                 existingUsernames.forEach((user) => {
                     let userId = user[0];
                     let loginName = user[1];
@@ -365,9 +367,9 @@ export default (io) => (socket) => {
                 if (member?.status) serverconfig.servermembers[member.id].status = member.status;
                 if (member?.name) serverconfig.servermembers[member.id].name = member.name;
                 if (member?.country_code) serverconfig.servermembers[member.id].country_code = member.country_code;
-                serverconfig.servermembers[member.id].onboarding = true;
-
                 if (member?.publicKey)  serverconfig.servermembers[member.id].publicKey = member?.publicKey;
+
+                serverconfig.servermembers[member.id].onboarding = true;
 
                 await saveMemberToDB(member?.id, serverconfig.servermembers[member.id]);
 
