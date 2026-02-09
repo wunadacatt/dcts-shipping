@@ -415,6 +415,7 @@ function editMessage(id) {
     }
     editMessageId = msgContent.getAttribute("data-message-id");
 
+    console.log(msgContent.innerHTML)
     setTimeout(() => {
         const regex = /<p>\s*<\/p>/gm;
         if(quill) quill.pasteUnconverted(msgContent.innerHTML.replace(regex, ''));
@@ -826,7 +827,9 @@ async function createMsgHTML({
                     <img class="icon" draggable="false" src="${reply?.author?.icon}" data-member-id="${reply?.author?.id}" onerror="this.src = '/img/default_pfp.png';">
                 </div>
                 <div class="meta">
-                    <label class="username" data-member-id="${reply?.author?.id}" style="color: ${reply?.author?.color};">${sanitizeHtmlForRender(truncateText(reply?.author?.name, 25))}</label>
+                    <label class="username" data-member-id="${reply?.author?.id}" style="color: ${reply?.author?.color};">
+                        ${sanitizeHtmlForRender(truncateText(reply?.author?.name, 25))}
+                    </label>
                 </div>
                 <div class="content reply" data-message-id="${reply?.messageId}" data-member-id="${reply?.author?.id}" data-timestamp="${reply?.timestamp}">
                     ${unescapeHtmlEntities(sanitizeHtmlForRender(reply?.message), false) || "[ Click to view message ]"} 
@@ -1099,13 +1102,10 @@ function getChatlog(container, index = -1, appendTop = false, scrollPosition = n
             return;
         }
 
-        // now im gonna try to prerender kinda, as im fucking shit of this sick
-        // bitch ass cracker keeps on flickering
         Clock.start("load_messages_processing")
-        // for that we create this bullshit temp div ig
         const renderer = document.createElement("div");
         document.body.appendChild(renderer);
-        // load all the messages into that
+
         await displayMessagesInElement({
             data: response.data,
             channelId,
@@ -1114,34 +1114,60 @@ function getChatlog(container, index = -1, appendTop = false, scrollPosition = n
             index,
             refElement,
         })
-        // wait for pics n shit
-        await Promise.all(
-            [...renderer.querySelectorAll("img, video")].map(el => {
-                if (el.tagName === "IMG") {
+
+        // set min-height on all images and listen for load
+        const images = [...renderer.querySelectorAll("img:not(.icon):not(.memberlist-img):not(.inline-text-emoji)")];
+        images.forEach(img => {
+            img.style.minHeight = "200px";
+            img.style.display = "block";
+
+            // remove min-height as soon as image loads
+            if (img.complete) {
+                img.style.minHeight = "";
+            } else {
+                img.addEventListener("load", () => {
+                    img.style.minHeight = "";
+                }, { once: true });
+
+                img.addEventListener("error", () => {
+                    img.style.minHeight = "";
+                }, { once: true });
+            }
+        });
+
+        // wait max 500ms for images to load
+        await Promise.race([
+            Promise.all(
+                images.map(el => {
                     return el.complete
                         ? Promise.resolve()
                         : el.decode().catch(() => {});
-                }
+                })
+            ),
+            new Promise(resolve => setTimeout(resolve, 500))
+        ]);
 
-                if (el.tagName === "VIDEO") {
+        // wait for videos
+        await Promise.race([
+            Promise.all(
+                [...renderer.querySelectorAll("video")].map(el => {
                     if (el.readyState >= 1) return Promise.resolve();
                     return new Promise(res => {
                         el.addEventListener("loadedmetadata", res, { once: true });
                         el.addEventListener("error", res, { once: true });
                     });
-                }
-
-                return Promise.resolve();
-            })
-        );
+                })
+            ),
+            new Promise(resolve => setTimeout(resolve, 500))
+        ]);
 
         if(channelId !== UserManager.getChannel()){
             ElementLoader.stop(channelname);
             Clock.stop("load_messages_processing")
+            renderer.remove();
             return;
         }
 
-        // insert and done hopefully
         const frag = document.createDocumentFragment();
         while (renderer.firstElementChild) {
             frag.appendChild(renderer.firstElementChild);
@@ -1154,24 +1180,50 @@ function getChatlog(container, index = -1, appendTop = false, scrollPosition = n
             document.getElementById("content").insertAdjacentHTML("beforeend", `<div style="width: 100%;text-align: center; color: gray; font-style: italic;display: block !important; float: left !important;" id="msg-0">No messages yet... be the first one!</div>`);
         }
 
-        // mark channel as read
         ChatManager.setChannelMarkerCounter(UserManager.getChannel())
 
-
-        // only scroll down initially
         if (!appendTop) {
             displayAwaitedMessages(container)
             await fixScrollAfterMediaLoad(container, container.scrollHeight, true)
+
+            // lock scroll position while remaining images load
+            const remainingImages = [...container.querySelectorAll("img:not(.icon):not(.memberlist-img):not(.inline-text-emoji)")].filter(img => !img.complete);
+            if (remainingImages.length > 0) {
+                const lastMsg = getLastMessage(container);
+                if (lastMsg?.element) {
+                    const scrollPos = getScrollPosition(container, lastMsg.element);
+
+                    remainingImages.forEach(img => {
+                        img.addEventListener("load", () => {
+                            requestAnimationFrame(() => {
+                                setScrollPosition(container, scrollPos);
+                            });
+                        }, { once: true });
+                    });
+                }
+            }
+
             updateMarkdownLinks(2000)
         }
         else{
-            // we are inserting shit on the top, but we dont want to scroll up as well,
-            // so we need to reset this shit. to avoid smooth scrolling we will need to disable that too.
             if (appendTop && scrollPosition !== null) {
                 await fixScrollAfterMediaLoad(container, scrollPosition, true)
+
+                // lock scroll position while remaining images load
+                const remainingImages = [...container.querySelectorAll("img:not(.icon):not(.memberlist-img):not(.inline-text-emoji)")].filter(img => !img.complete);
+                if (remainingImages.length > 0) {
+                    remainingImages.forEach(img => {
+                        img.addEventListener("load", () => {
+                            requestAnimationFrame(() => {
+                                setScrollPosition(container, scrollPosition);
+                            });
+                        }, { once: true });
+                    });
+                }
             }
             displayAwaitedMessages(container)
         }
+
         Clock.stop("load_messages_total")
         ElementLoader.stop(channelbar);
     });

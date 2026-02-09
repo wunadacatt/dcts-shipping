@@ -36,6 +36,8 @@ import {clearBase64FromDatabase} from "./migrations/base64_fixer.mjs";
 import {getMemberHighestRole} from "./chat/helper.mjs";
 import {migrateOldMessagesToNewMessageSystemWithoutEncoding} from "./migrations/messageMigration.mjs";
 import archiver from "archiver";
+import JSONTools from "@hackthedev/json-tools";
+import {initPaymentSystem} from "./payments.mjs";
 
 var serverconfigEditable;
 
@@ -608,8 +610,6 @@ export function checkBool(value, type) {
 }
 
 export function checkConfigAdditions() {
-
-
     // recreating the config example minimum base so that copying isnt needed anymore
     checkObjectKeys(serverconfig, "serverinfo.name", "Default Server")
     checkObjectKeys(serverconfig, "serverinfo.description", "")

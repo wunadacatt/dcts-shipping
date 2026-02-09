@@ -201,6 +201,11 @@ function getMemberList() {
 
                 if(memberIcon){
                     memberIcon.classList.toggle("offline_pfp", !!memberObject.isOffline);
+
+                    let newSrc = ChatManager.proxyUrl(memberObject.icon);
+                    if(memberIcon.src !== newSrc){
+                        memberIcon.src = newSrc;
+                    }
                 }
 
                 if(memberName && memberName.innerText !== memberObject.name){

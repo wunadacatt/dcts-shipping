@@ -9,6 +9,7 @@ import JSONTools from "@hackthedev/json-tools";
 
 import unzipper from "unzipper";
 import {Readable} from "stream";
+import {getThemes} from "../getThemes.mjs";
 
 
 export async function loadThemeCache(force = false){
@@ -46,8 +47,10 @@ export async function listThemes() {
     // no theme cache found or expired
     if(!themes){
         // so we fetch freshly from github
-        const res = await fetch("https://api.github.com/repos/DCTS-Project/themes/contents/theme");
-        themes = (await res.json()).filter(e => e.type === "dir").map(e => e.name);
+        //const res = await fetch("https://api.github.com/repos/DCTS-Project/themes/contents/theme");
+        //themes = (await res.json()).filter(e => e.type === "dir").map(e => e.name);
+
+        let themes = await getThemes();
 
         // then save and return the new themes
         await saveThemeCache(themes)

@@ -189,7 +189,7 @@ export async function addInboxMessage(memberId, data = {}, type = "general", cus
 
     if (customId) {
         query = `INSERT
-        IGNORE INTO inbox (memberId, type, data, createdAt, customId) VALUES (?, ?, ?, ?, ?)`;
+        INTO inbox (memberId, type, data, createdAt, customId) VALUES (?, ?, ?, ?, ?)`;
         return await queryDatabase(query, [memberId, type, JSON.stringify(data), new Date().getTime(), customId]);
     }
 
@@ -202,7 +202,8 @@ export async function getInboxMessages({
                                            inboxId = null,
                                            onlyUnread = false
                                        } = {}) {
-    if (inboxId != null) {
+
+    if (inboxId !== null) {
         const query = `SELECT *
                        FROM inbox
                        WHERE inboxId = ? LIMIT 50`;
@@ -213,7 +214,7 @@ export async function getInboxMessages({
         const query = `SELECT *
                        FROM inbox
                        WHERE memberId = ?
-                       ORDER BY createdAt DESC LIMIT 50`;
+                       ORDER BY createdAt DESC LIMIT 100`;
         return await queryDatabase(query, [memberId]);
     }
 

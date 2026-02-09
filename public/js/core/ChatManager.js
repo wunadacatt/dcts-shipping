@@ -19,6 +19,8 @@ class ChatManager {
     }
 
     static async showThemePage(){
+        initThemePageContext();
+
         let themesRes = await fetch("/themes/list");
         let themes;
         if(themesRes.status === 200){
@@ -96,6 +98,7 @@ class ChatManager {
 
                 <div class="theme-page">
                     <h1>Available Themes</h1>
+                    <p onclick="window.location.reload()" style="margin-top: -2rem; cursor: pointer">« Back</p>
                     
                     <div class="theme-entries">
                         ${buildThemeEntryBodyHTML(themes)}
@@ -117,7 +120,7 @@ class ChatManager {
 
         function getThemeEntryHTML(theme){
             return `
-                <div class="theme-entry">
+                <div class="theme-entry" data-theme="${theme}">
                     <div class="thumbnail-container">
                         <img src="https://raw.githubusercontent.com/DCTS-Project/themes/refs/heads/main/theme/${theme}/thumbnail.png">
                     </div>
@@ -125,6 +128,33 @@ class ChatManager {
                 </div>
             
             `
+        }
+
+        function initThemePageContext(){
+            if(window.didInitthemePageContext) return;
+
+            ContextMenu.registerClickEvent(
+                "theme page",
+                [
+                    ".theme-page .theme-entries .theme-entry"
+                ],
+                async (data) => {
+                    let theme = findAttributeUp(data.element, "data-theme");
+                    if (!theme) {
+                        console.warn("Couldnt get theme from element");
+                        return;
+                    }
+
+                    UserManager.setTheme(theme)
+                    showSystemMessage({
+                        title: `Theme changed to '${theme}'`,
+                        text: "You'll need to reload to see the new theme!",
+                        type: "success"
+                    })
+                }
+            )
+
+            window.didInitthemePageContext = true;
         }
     }
 

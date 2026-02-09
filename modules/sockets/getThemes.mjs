@@ -1,6 +1,7 @@
 import { validateMemberId } from "../functions/main.mjs";
 import { fs } from "../../index.mjs";
 import https from "https";
+import ArrayTools from "@hackthedev/arraytools";
 
 function getLocalThemes() {
     const dirs = fs.readdirSync("./public/css/themes/", { withFileTypes: true });
@@ -32,6 +33,13 @@ function getThemeFiles(theme) {
     const base = `./public/css/themes/${theme}/`;
     if (!fs.existsSync(base)) return [];
     return fs.readdirSync(base).filter(f => f.endsWith(".css"));
+}
+
+export async function getThemes(){
+    const local = getLocalThemes();
+    const remote = await fetchGithubThemes();
+    const merged = ArrayTools.merge(...new Set([...local, ...remote]));
+    return merged
 }
 
 export default (io) => (socket) => {

@@ -17,16 +17,9 @@ import crypto from "crypto";
 
 import Logger from "@hackthedev/terminal-logger"
 import dSyncSql from "@hackthedev/dsync-sql"
-import ArrayTools from "@hackthedev/arraytools"
 import dSyncIPSec from "@hackthedev/dsync-ipsec"
-import dSyncRateLimit from "@hackthedev/dsync-ratelimit"
-//import dSyncFiles from "@hackthedev/dsync-files";
+import FrontendLibs from "@hackthedev/frontend-libs";
 
-//import DateTools from "/mnt/SSD/network-z-dev/date-tools/index.mjs"
-//console.log(DateTools.formatDate(DateTools.getDateFromOffset("1 day")))
-//console.log(DateTools.getReadableDuration(DateTools.getDateFromOffset("1 day")));
-
-//import dSyncIPSec from "/mnt/SSD/network-z-dev/dSyncIPSec/index.mjs"
 
 // Depending on the SSL setting, this will switch.
 export let server; // = http.createServer(app);
@@ -127,14 +120,12 @@ checkServerDirectories();
 // check if config file exists
 checkFile("./plugins/settings.json", true, "{}");
 
-
 /*
     Holy Server config file.
     needs to be above the imports else serverconfig will be undefined
  */
 
 export var serverconfig = fs.existsSync(configPath) ? JSONTools.tryParse(fs.readFileSync(configPath, {encoding: "utf-8"})) : {};
-
 checkConfigAdditions();
 
 
@@ -282,6 +273,7 @@ import {
 } from "./modules/functions/migrations/helper.mjs";
 import {migrateOldMessagesToNewMessageSystemWithoutEncoding} from "./modules/functions/migrations/messageMigration.mjs";
 import JSONTools from "@hackthedev/json-tools";
+import {initPaymentSystem, paymentConfig} from "./modules/functions/payments.mjs";
 
 /*
     Files for the plugin system
@@ -464,7 +456,7 @@ const tables = [
     {
         name: "inbox",
         columns: [
-            {name: "inboxId", type: "int(100) NOT NULL"},
+            {name: "inboxId", type: "int(100) NOT NULL AUTO_INCREMENT PRIMARY KEY"},
             {name: "memberId", type: "varchar(250) NOT NULL"},
             {name: "customId", type: "varchar(250) DEFAULT NULL"},
             {name: "data", type: "longtext NOT NULL"},
@@ -909,8 +901,24 @@ export const io = new Server(server, {
 
     await checkMigrations();
     await ipsec.filterExpressTraffic(app)
-    startServer();
 
+    let libDir = path.join(path.resolve(), "public", "js", "libs");
+    const results = await FrontendLibs.installMultiple([
+        { package: '@hackthedev/file-manager@1.0.0', path: libDir },
+        { package: '@hackthedev/element-loader@1.0.0', path: libDir },
+    ]);
+
+    results.forEach((r) => {
+        if(r?.success || r?.skipped){
+            Logger.debug(r?.message)
+        }
+        else{
+            Logger.error(r?.message)
+        }
+    });
+
+    initPaymentSystem(app)
+    startServer();
     listenToIO();
 })();
 

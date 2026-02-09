@@ -66,7 +66,6 @@ var allowEditorBlur
 document.addEventListener("DOMContentLoaded", async function () {
     ChatManager.applyThemeOnLoad(UserManager.getTheme(), UserManager.getThemeAccent());
     Docs.registerContextMenu()
-    //ChatManager.showThemePage();
 
     registerMessageInfiniteLoad(document.getElementById("content"))
     registerMessageCreateEvent();
@@ -333,7 +332,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             await PageRenderer.renderHTML(data.element.closest(".inbox-container"),
                 `
                     <div class="inbox-reply">
-                        <span onclick="PageRenderer.remove();">« Back</span>
+                        <span onclick="PageRenderer.remove();" style="cursor: pointer;">« Back</span>
                         
                         <div class="inbox-content">
                             ${data.element.closest(".entry").outerHTML}
@@ -1729,8 +1728,9 @@ socket.on('receiveCurrentChannel', function (channel) {
     }
 });
 
-socket.on('updateMemberList', function (data) {
+socket.on('updateMemberList', async function (data) {
     getMemberList();
+    await updateMentionAutocompleteData();
 });
 
 socket.on('updateGroupList', function (data) {
