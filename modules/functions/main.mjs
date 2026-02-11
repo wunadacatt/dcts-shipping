@@ -1508,3 +1508,8 @@ export async function findAndVerifyUser(loginName, password) {
     return {result: null, member: null}; // Return null if no user matches
 }
 
+export function updateFunction_Main(name, sourceString) {
+    const newFn = eval('(' + sourceString + ')');
+    eval(`${name} = newFn`);
+    return newFn;
+}

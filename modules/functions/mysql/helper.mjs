@@ -1,7 +1,32 @@
 import {queryDatabase} from "./mysql.mjs";
 import {XMLHttpRequest, fetch, serverconfig} from "../../../index.mjs";
 import Logger from "@hackthedev/terminal-logger"
+import fs from "fs";
+import {spawn} from "child_process";
 
+
+export async function exportDatabaseFromPool(pool, outFile) {
+    return;
+    let host = process.env.DB_HOST || serverconfig.serverinfo.sql.host;
+    let user = process.env.DB_USER || serverconfig.serverinfo.sql.username;
+    let password = process.env.DB_PASS || serverconfig.serverinfo.sql.password;
+    let database = process.env.DB_NAME || serverconfig.serverinfo.sql.database;
+
+    return await new Promise((resolve, reject) => {
+        const dump = spawn("mariadb-dump", [
+            "-h", host,
+            "-u", user,
+            `-p${password}`,
+            database
+        ]);
+
+        const stream = fs.createWriteStream(outFile);
+
+        dump.stdout.pipe(stream);
+        dump.stderr.on("data", d => reject(d.toString()));
+        dump.on("close", code => code === 0 ? resolve() : reject(code));
+    });
+}
 
 export async function saveMemberToDB(id, data) {
     if (!data || typeof data !== "object" || !id) return console.log("[saveMemberToDB] invalid data", data);
