@@ -154,67 +154,7 @@ export function hasPermission(userId, permissions, channelOrGroupId = null, mode
 
 
 export function checkUserChannelPermission(channel, userId, perms) {
-
     return hasPermission(userId, perms, channel);
-
-    /* DEPRECATED */
-
-    const userRoles = resolveRolesByUserId(userId);
-    const group = resolveGroupByChannelId(channel);
-    const category = resolveCategoryByChannelId(channel);
-
-    // Validate if the channel, group, and category are properly configured
-    if (!group || !category || !channel) {
-        return false; // Deny if any required identifier is missing
-    }
-
-    const channelPermissions =
-        serverconfig.groups[group]?.channels?.categories[category]?.channel[channel]?.permissions;
-
-    if (!channelPermissions) {
-        return false; // Deny if no permissions are configured for the channel
-    }
-
-    // Ensure `perms` is an array, even if a single permission is passed
-    const permissionsToCheck = Array.isArray(perms) ? perms : [perms];
-
-    // Check for "administrator" permission in any role
-    for (const role of userRoles) {
-        const effectiveRole = channelPermissions.hasOwnProperty(role) ? role : "0";
-
-        if (channelPermissions[effectiveRole]?.["administrator"] === 1) {
-            return true; // If the user has "administrator", grant access immediately
-        }
-    }
-
-    // Check all specified permissions for each user role
-    for (const role of userRoles) {
-        const effectiveRole = channelPermissions.hasOwnProperty(role) ? role : "0";
-
-        // Check if all required permissions are explicitly set to 1 for the role
-        const allPermissionsGranted = permissionsToCheck.every(
-            (perm) => channelPermissions[effectiveRole]?.[perm] === 1
-        );
-
-        // If all permissions are granted for this role, return true
-        if (allPermissionsGranted) {
-            return true;
-        }
-
-        // If any permission is explicitly denied (0), deny access immediately
-        const anyPermissionDenied = permissionsToCheck.some(
-            (perm) =>
-                channelPermissions[effectiveRole]?.[perm] === 0 ||
-                !(perm in channelPermissions[effectiveRole])
-        );
-
-        if (anyPermissionDenied) {
-            return false;
-        }
-    }
-
-    // Deny by default if no role grants all the required permissions
-    return false;
 }
 
 
@@ -409,9 +349,6 @@ export async function lookupIP(ip){
     else{
         return JSON.parse(ipCache.data);
     }
-
-    // default
-    return {}
 }
 
 export async function getMemberIpInfo(socket){
@@ -740,14 +677,12 @@ export function addBan({
                         ip = null,
                        } = {}){
 
-    serverconfig.banlist[identifier] = JSON.parse(`
-                    {
-                        "bannedBy": "${bannedBy}",
-                        "reason": "${reason}",
-                        "until": ${until},
-                        "ip": "${ip}"
-                    }
-    `);
+    serverconfig.banlist[identifier] = {
+        bannedBy: bannedBy,
+        reason: reason,
+        until: until,
+        ip: ip
+    };
     saveConfig(serverconfig);
 }
 
@@ -755,7 +690,6 @@ export function removeBan(identifier){
     if(serverconfig.banlist.hasOwnProperty(identifier)) delete serverconfig.banlist[identifier]
 
 
-    console.log(serverconfig.servermembers[identifier]?.isBanned )
     if(serverconfig.servermembers[identifier]?.isBanned){
         serverconfig.servermembers[identifier].isBanned = 0
     }
@@ -821,7 +755,7 @@ export function unbanIp(socket) {
     let ip = getSocketIp(socket)
 
     if (serverconfig.banlist[ip]) {
-        serverconfig.banlist[ip]
+        delete serverconfig.banlist[ip];
         saveConfig(serverconfig);
     } else {
         Logger.warn(`Tried to unban IP ${ip} but it was not banned`);
@@ -940,20 +874,19 @@ export function getNewDate(offset) {
 export function disconnectUser(socketId, reason = null) {
 
     try {
-        sendMessageToUser(socketId, JSON.parse(
-            `{
-            "title": "You've been disconnected",
-            "message": "${reason ? `Reason:<br>${reason}` : ""}",
-            "buttons": {
+        sendMessageToUser(socketId, {
+            title: "You've been disconnected",
+            message: reason ? `Reason:<br>${reason}` : "",
+            buttons: {
                 "0": {
-                    "text": "Ok",
-                    "events": "onclick='closeModal()'"
+                    text: "Ok",
+                    events: "onclick='closeModal()'"
                 }
             },
-            "type": "error",
-            "displayTime": 600000,
-            "wasDisconnected": true
-        }`));
+            type: "error",
+            displayTime: 600000,
+            wasDisconnected: true
+        });
 
         io.sockets.sockets.get(socketId).disconnect();
     } catch (ex) {
@@ -968,13 +901,11 @@ export function muteUser(member) {
     let jsonObj;
     try {
         muteDate = getNewDate(member.time).getTime();
-        jsonObj = JSON.parse(`
-            {
-                "mutedBy": "${member.id}",
-                "reason": "${member.reason}",
-                "duration": ${muteDate}
-            }
-            `);
+        jsonObj = {
+            mutedBy: member.id,
+            reason: member.reason,
+            duration: muteDate
+        };
     } catch (err) {
         return {error: err}
     }

@@ -336,28 +336,27 @@ export default (io) => (socket) => {
                 });
 
                 // setup member
-                serverconfig.servermembers[member.id] = JSON.parse(
-                    `{
-                                  "id": ${member.id},
-                                  "token": "${member.token}",
-                                  "loginName": "${member.loginName}",
-                                  "name": "",
-                                  "nickname": null,
-                                  "status": "",
-                                  "aboutme": "",
-                                  "icon": "",
-                                  "banner": "",
-                                  "joined": ${new Date().getTime()},
-                                  "isOnline": 1,
-                                  "lastOnline": ${new Date().getTime()},
-                                  "isBanned": 0,
-                                  "isMuted": 0,
-                                  "password": "${await hashPassword(member.password)}",
-                                  "publicKey": "",
-                                  "isVerifiedKey": false
-                                }
-                            `,
-                );
+                const now = new Date().getTime();
+                const hashedPassword = await hashPassword(member.password);
+                serverconfig.servermembers[member.id] = {
+                    id: member.id,
+                    token: member.token,
+                    loginName: member.loginName,
+                    name: "",
+                    nickname: null,
+                    status: "",
+                    aboutme: "",
+                    icon: "",
+                    banner: "",
+                    joined: now,
+                    isOnline: 1,
+                    lastOnline: now,
+                    isBanned: 0,
+                    isMuted: 0,
+                    password: hashedPassword,
+                    publicKey: "",
+                    isVerifiedKey: false
+                };
 
                 // set some values this way because it may cauz errors
                 // and i dont wanna manually encode shit etc...
