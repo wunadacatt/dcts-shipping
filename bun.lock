@@ -15,7 +15,7 @@
         "@hackthedev/dsync-ratelimit": "^1.0.1",
         "@hackthedev/dsync-shop": "^1.0.1",
         "@hackthedev/dsync-sign": "^1.0.10",
-        "@hackthedev/dsync-sql": "^1.0.9",
+        "@hackthedev/dsync-sql": "^1.0.10",
         "@hackthedev/frontend-libs": "^1.0.5",
         "@hackthedev/json-tools": "^1.0.8",
         "@hackthedev/terminal-logger": "^1.0.0",
@@ -74,7 +74,7 @@
 
     "@hackthedev/dsync-sign": ["@hackthedev/dsync-sign@1.0.10", "", {}, "sha512-+i51CDgw+nf5e5SsnOz7pYAiraaU6VqMxs5GDzkLAmkmjRVGF9G3fzprccJQE4bPz8kve8/SzYBQy0Gfgyqu5w=="],
 
-    "@hackthedev/dsync-sql": ["@hackthedev/dsync-sql@1.0.9", "", { "dependencies": { "@hackthedev/terminal-logger": "^1.0.0", "mysql2": "^3.16.0", "mysql2-promise": "^0.1.4" } }, "sha512-hb9Mj3ulzoL5PH4dLi4ervbC+O16XuYo64nSD4nCEG+Y8ZvRlDsTEV5f0rr9MlpqRG2ig2W0dmAEykJs09jE4g=="],
+    "@hackthedev/dsync-sql": ["@hackthedev/dsync-sql@1.0.10", "", { "dependencies": { "@hackthedev/terminal-logger": "^1.0.0", "mysql2": "^3.16.0", "mysql2-promise": "^0.1.4" } }, "sha512-P5y/290U/P5jFy1cigsRwMn95VIySIc3HnxN8t0AeiUy2p85EHW095bKYLgoMQSv15NFHMHA0ubmIxF9CuySaQ=="],
 
     "@hackthedev/frontend-libs": ["@hackthedev/frontend-libs@1.0.5", "", {}, "sha512-fhNoNffBAaHfxb3ckxxPG/2gjfrklEoQrox5h1shLFeMlT2gdzlELy7hHXrLOtQcvHrjsJx2Qxg3mppG74agtg=="],
 

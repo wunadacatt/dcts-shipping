@@ -147,11 +147,6 @@ export default (io) => (socket) => {
 
     // socket.on code here
     socket.on("userConnected", async function (member, response) {
-        if (member?.id) member.id = String(member.id);
-        if (member?.token) member.token = String(member.token);
-        if (member?.pow?.challenge) member.pow.challenge = String(member?.pow?.challenge);
-        if (member?.pow?.solution) member.pow.solution = String(member?.pow?.solution);
-
         checkRateLimit(socket);
         if (!member?.id || member?.id.length !== 12) {
             return response({
@@ -161,21 +156,23 @@ export default (io) => (socket) => {
         }
 
         member.id = xssFilters.inHTMLData(normaliseString(member.id));
+        member.name = xssFilters.inHTMLData(normaliseString(member.name));
         member.loginName = xssFilters.inHTMLData(normaliseString(member.loginName));
-
-        if (member?.name) member.name = xssFilters.inHTMLData(normaliseString(member.name));
-        if (member?.status) member.status = truncateText(xssFilters.inHTMLData(normaliseString(member.status)), 25,);
-
-        if (member?.aboutme) member.aboutme = truncateText(xssFilters.inHTMLData(normaliseString(member.aboutme)), 500,);
-        if (member?.icon) member.icon = xssFilters.inHTMLData(normaliseString(member.icon));
-        if (member?.banner) member.banner = xssFilters.inHTMLData(normaliseString(member.banner));
-
+        member.status = truncateText(
+            xssFilters.inHTMLData(normaliseString(member.status)),
+            25,
+        );
+        member.aboutme = truncateText(
+            xssFilters.inHTMLData(normaliseString(member.aboutme)),
+            500,
+        );
+        member.icon = xssFilters.inHTMLData(normaliseString(member.icon));
+        member.banner = xssFilters.inHTMLData(normaliseString(member.banner));
         member.token = xssFilters.inHTMLData(normaliseString(member.token));
         member.onboarding =
             xssFilters.inHTMLData(normaliseString(member.onboarding)) === "true";
         member.password =
             xssFilters.inHTMLData(normaliseString(member.password)) || null;
-
         member.group = xssFilters.inHTMLData(normaliseString(member.group));
         member.category = xssFilters.inHTMLData(normaliseString(member.category));
         member.channel = xssFilters.inHTMLData(normaliseString(member.channel));
@@ -183,8 +180,8 @@ export default (io) => (socket) => {
 
         // get ip info
         let ipInfo = await getMemberIpInfo(socket);
-        if (ipInfo?.error) Logger.debug(ipInfo.error);
-        if (ipInfo?.location?.country_code) member.country_code = ipInfo.location.country_code;
+        if(ipInfo?.error) Logger.debug(ipInfo.error);
+        if(ipInfo?.location?.country_code) member.country_code = ipInfo.location.country_code;
 
         // base 64 too bad
         if (member?.icon?.startsWith("data:image")) member.icon = "";
@@ -322,7 +319,6 @@ export default (io) => (socket) => {
                 }
 
                 var userToken = generateId(48);
-                member.token = userToken;
 
                 // if the user login name already exists we just append an id to the login name.
                 // we then emit it to the user so they can save it.
@@ -343,7 +339,7 @@ export default (io) => (socket) => {
                 serverconfig.servermembers[member.id] = JSON.parse(
                     `{
                                   "id": ${member.id},
-                                  "token": "${member.token}",
+                                  "token": "${userToken}",
                                   "loginName": "${member.loginName}",
                                   "name": "",
                                   "nickname": null,
@@ -369,9 +365,9 @@ export default (io) => (socket) => {
                 if (member?.banner) serverconfig.servermembers[member.id].banner = member.banner;
                 if (member?.aboutme) serverconfig.servermembers[member.id].aboutme = member.aboutme;
                 if (member?.status) serverconfig.servermembers[member.id].status = member.status;
-                if (member?.name) serverconfig.servermembers[member.id].name = member.name || "Member";
+                if (member?.name) serverconfig.servermembers[member.id].name = member.name;
                 if (member?.country_code) serverconfig.servermembers[member.id].country_code = member.country_code;
-                if (member?.publicKey) serverconfig.servermembers[member.id].publicKey = member?.publicKey;
+                if (member?.publicKey)  serverconfig.servermembers[member.id].publicKey = member?.publicKey;
 
                 serverconfig.servermembers[member.id].onboarding = true;
 
@@ -462,17 +458,7 @@ export default (io) => (socket) => {
                 socket.join(member.id);
                 socket.data.memberId = member.id;
 
-                response({
-                    finishedOnboarding: true,
-                    token: member.token,
-                    id: member.id,
-                    icon: serverconfig.servermembers[member.id].icon,
-                    banner: serverconfig.servermembers[member.id].banner,
-                    name: serverconfig.servermembers[member.id].name,
-                    loginName: serverconfig.servermembers[member.id].loginName,
-                    status: serverconfig.servermembers[member.id].status,
-                    aboutme: serverconfig.servermembers[member.id].aboutme,
-                });
+                response({finishedOnboarding: true});
             } else {
                 if (
                     member.token == null ||
@@ -534,14 +520,14 @@ export default (io) => (socket) => {
                 serverconfig.servermembers[member.id].aboutme = xssFilters.inHTMLData(
                     member.aboutme,
                 );
-                if (member.icon) serverconfig.servermembers[member.id].icon = xssFilters.inHTMLData(
+                if(member.icon) serverconfig.servermembers[member.id].icon = xssFilters.inHTMLData(
                     member.icon,
                 );
-                if (member.banner) serverconfig.servermembers[member.id].banner = xssFilters.inHTMLData(
+                if(member.banner) serverconfig.servermembers[member.id].banner = xssFilters.inHTMLData(
                     member.banner,
                 );
 
-                if (member.country_code) serverconfig.servermembers[member.id].country_code = member.country_code;
+                if(member.country_code) serverconfig.servermembers[member.id].country_code = member.country_code;
 
                 serverconfig.servermembers[member.id].lastOnline = new Date().getTime();
                 socket.memberId = member.id;

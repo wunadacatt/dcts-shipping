@@ -22,6 +22,7 @@ import dSync from "@hackthedev/dsync";
 
 import Logger from "@hackthedev/terminal-logger"
 import dSyncSql from "@hackthedev/dsync-sql"
+//import dSyncSql from "E:\\network-z-dev\\dSyncSql\\index.mjs"
 import dSyncIPSec from "@hackthedev/dsync-ipsec"
 import FrontendLibs from "@hackthedev/frontend-libs";
 
@@ -163,6 +164,11 @@ if (process.env.DB_NAME)
 serverconfig.serverinfo.sql.enabled = true;
 await saveConfig(serverconfig);
 
+// nicer warning
+if(!serverconfig?.serverinfo?.sql?.username){
+    Logger.warn("Congrats, setup worked! Please go to the /configs/config.json file and enter the SQL information under 'sql'");
+    process.exit(0);
+}
 
 // create sql pool
 export let db = new dSyncSql({
@@ -406,30 +412,21 @@ const tables = [
     {
         name: "message_reactions",
         columns: [
-            {name: "cid", type: "varchar(500) NOT NULL"},
-            {name: "reactionId", type: "int(100) NOT NULL"},
+            {name: "cid", type: "varchar(500) NOT NULL UNIQUE KEY"},
+            {name: "reactionId", type: "int(100) NOT NULL PRIMARY KEY AUTO_INCREMENT"},
             {name: "messageId", type: "varchar(100) NOT NULL"},
             {name: "emojiHash", type: "longtext NOT NULL"},
             {name: "memberId", type: "varchar(100) NOT NULL"},
             {name: "react_timestamp", type: "bigint NOT NULL DEFAULT (UNIX_TIMESTAMP() * 1000)"}
-        ],
-        keys: [
-            {name: "PRIMARY KEY", type: "(reactionId)"},
-            {name: "UNIQUE KEY", type: "cid (cid)"},
-        ],
-        autoIncrement: "reactionId int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1",
+        ]
     },
     {
         name: "ip_cache",
         columns: [
-            {name: "ip", type: "varchar(100) NOT NULL"},
+            {name: "ip", type: "varchar(100) NOT NULL PRIMARY KEY UNIQUE KEY"},
             {name: "data", type: "longtext NOT NULL"},
             {name: "last_sync", type: "bigint NOT NULL DEFAULT (UNIX_TIMESTAMP() * 1000)"}
-        ],
-        keys: [
-            {name: "PRIMARY KEY", type: "(reactionId)"},
-            {name: "UNIQUE KEY", type: "ip (ip)"}]
-        ,
+        ]
     },
     {
         name: "cache",

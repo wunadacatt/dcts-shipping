@@ -20,7 +20,7 @@
     "@hackthedev/dsync-ratelimit": "^1.0.1",
     "@hackthedev/dsync-shop": "^1.0.1",
     "@hackthedev/dsync-sign": "^1.0.10",
-    "@hackthedev/dsync-sql": "^1.0.9",
+    "@hackthedev/dsync-sql": "^1.0.10",
     "@hackthedev/frontend-libs": "^1.0.5",
     "@hackthedev/json-tools": "^1.0.8",
     "@hackthedev/terminal-logger": "^1.0.0",
