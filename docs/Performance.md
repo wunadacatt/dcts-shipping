@@ -1,6 +1,6 @@
 # Performance
 
-DCTS itself is pretty lightweight and if your system can run nodejs and a small database, it will 100% be able to run DCTS.  Generally speaking you can be sure that it will run on a potato too (not literally tho). Generally speaking there is still a lot of room to optimize the server and client even more, and its already very fast :)
+DCTS itself is pretty lightweight and if your system can run NodeJS and a small database, it will 100% be able to run DCTS.  Generally speaking you can be sure that it will run on a potato too (not literally tho). There is still a lot of room to optimize the server and client more, and its already very fast :)
 
 ------
 
