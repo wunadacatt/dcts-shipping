@@ -698,13 +698,13 @@ async function checkMediaTypeAsync(url) {
                             throw new Error('Content-Type header is missing');
                         }
                     } else {
-                        if (xhr.status === 404) return;
+                        if (xhr.status === 404) resolve ("404");
 
                         throw new Error(`HTTP error! status: ${xhr.status}`);
                     }
                 } catch (error) {
                     console.error('Error checking media type:', error);
-                    reject('error');
+                    resolve('error');
                 }
             }
 
