@@ -160,6 +160,9 @@ export default (io) => (socket) => {
             });
         }
 
+        if(member?.status === "null" || member?.status === "undefined") member.status = null
+        if(member?.aboutme === "null" || member?.aboutme === "undefined") member.aboutme = null
+
         member.id = xssFilters.inHTMLData(normaliseString(member.id));
         member.loginName = xssFilters.inHTMLData(normaliseString(member.loginName));
 
