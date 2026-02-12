@@ -19,7 +19,7 @@ export async function loadThemeCache(force = false){
     if(themeCacheRow?.length > 0) {
         let lastUpdate = themeCacheRow[0]?.last_update;
         let updateDate = new Date(lastUpdate);
-        let cacheExpiredDate = updateDate.getTime() + DateTools.getDateFromOffset("1 day").getTime();
+        let cacheExpiredDate = updateDate.getTime() + DateTools.getDateFromOffset("1 hour").getTime();
 
         // if true, cache expired
         if(new Date().getTime() > cacheExpiredDate){
@@ -42,22 +42,23 @@ export async function saveThemeCache(data){
 }
 
 export async function listThemes() {
-    let themes = await loadThemeCache();
+    let cachedGithub = await loadThemeCache();
+    let githubThemes = cachedGithub;
 
-    // no theme cache found or expired
-    if(!themes){
-        // so we fetch freshly from github
-        //const res = await fetch("https://api.github.com/repos/DCTS-Project/themes/contents/theme");
-        //themes = (await res.json()).filter(e => e.type === "dir").map(e => e.name);
-
-        let themes = await getThemes();
-
-        // then save and return the new themes
-        await saveThemeCache(themes)
-        return themes;
+    // no cache so we fetch new themes lol
+    if (!githubThemes) {
+        githubThemes = await getThemes();
+        await saveThemeCache(githubThemes);
     }
 
-    return themes;
+    const localDir = path.resolve("public", "css", "themes");
+    const localThemes = fs.existsSync(localDir)
+        ? fs.readdirSync(localDir, { withFileTypes: true })
+            .filter(d => d.isDirectory())
+            .map(d => d.name)
+        : [];
+
+    return Array.from(new Set([...localThemes, ...githubThemes]));
 }
 
 export async function downloadTheme(themeName){
@@ -66,51 +67,59 @@ export async function downloadTheme(themeName){
     const zipUrl = "https://api.github.com/repos/DCTS-Project/themes/zipball/main";
     const themesDir = path.resolve("public", "css", "themes");
     const targetDir = path.join(themesDir, themeName);
+    const cssPath = path.join(targetDir, `${themeName}.css`);
+    const configPath = path.join(targetDir, "config.json");
 
-    if(fs.existsSync(targetDir)) {
-        return path.join(targetDir, `${themeName}.css`);
+    if(!fs.existsSync(targetDir)){
+        fs.mkdirSync(themesDir, { recursive: true });
+
+        const res = await fetch(zipUrl, {
+            headers: { "User-Agent": "DCTS" }
+        });
+        if(!res.ok) throw new Error("zip download failed");
+
+        const nodeStream = Readable.fromWeb(res.body);
+
+        await new Promise((resolve, reject) => {
+            nodeStream
+                .pipe(unzipper.Parse())
+                .on("entry", entry => {
+                    const rel = entry.path.split("/").slice(1).join("/");
+
+                    if(!rel.startsWith(`theme/${themeName}/`)){
+                        entry.autodrain();
+                        return;
+                    }
+
+                    const outPath = path.join(
+                        themesDir,
+                        rel.replace(`theme/${themeName}/`, `${themeName}/`)
+                    );
+
+                    if(entry.type === "Directory"){
+                        fs.mkdirSync(outPath, { recursive: true });
+                        entry.autodrain();
+                    } else {
+                        fs.mkdirSync(path.dirname(outPath), { recursive: true });
+                        entry.pipe(fs.createWriteStream(outPath));
+                    }
+                })
+                .on("close", resolve)
+                .on("error", reject);
+        });
     }
 
-    fs.mkdirSync(themesDir, { recursive: true });
+    let config = null;
+    if(fs.existsSync(configPath)){
+        config = JSONTools.tryParse(fs.readFileSync(configPath, "utf8"));
+    }
 
-    const res = await fetch(zipUrl, {
-        headers: { "User-Agent": "DCTS" }
-    });
-
-    if(!res.ok) throw new Error("zip download failed");
-
-    const nodeStream = Readable.fromWeb(res.body);
-
-    await new Promise((resolve, reject) => {
-        nodeStream
-            .pipe(unzipper.Parse())
-            .on("entry", entry => {
-                const rel = entry.path.split("/").slice(1).join("/");
-
-                if(!rel.startsWith(`theme/${themeName}/`)){
-                    entry.autodrain();
-                    return;
-                }
-
-                const outPath = path.join(
-                    themesDir,
-                    rel.replace(`theme/${themeName}/`, `${themeName}/`)
-                );
-
-                if(entry.type === "Directory"){
-                    fs.mkdirSync(outPath, { recursive: true });
-                    entry.autodrain();
-                } else {
-                    fs.mkdirSync(path.dirname(outPath), { recursive: true });
-                    entry.pipe(fs.createWriteStream(outPath));
-                }
-            })
-            .on("close", resolve)
-            .on("error", reject);
-    });
-
-    return path.join(targetDir, `${themeName}.css`);
+    return {
+        css: fs.existsSync(cssPath) ? cssPath : null,
+        config
+    };
 }
+
 
 
 app.get("/themes/list", async (req, res) => {
@@ -120,12 +129,16 @@ app.get("/themes/list", async (req, res) => {
 
 app.get("/themes/download{/:theme}", async (req, res) => {
     const {theme} = req.params;
-
     if(!theme) return res.status(404).json({ok: false, error: "Missing theme parameter"});
-    let themePath = await downloadTheme(theme);
-    console.log(themePath)
 
-    return res.status(200).json({ ok: true, theme });
+    const data = await downloadTheme(theme);
+
+    return res.status(200).json({
+        ok: true,
+        theme,
+        css: data.css,
+        config: data.config
+    });
 });
 
 

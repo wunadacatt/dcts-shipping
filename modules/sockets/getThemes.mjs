@@ -11,7 +11,7 @@ function getLocalThemes() {
 function fetchGithubThemes() {
     return new Promise(resolve => {
         https.get(
-            "https://api.github.com/repos/hackthedev/dcts-shipping/contents/public/css/themes",
+            "https://api.github.com/repos/DCTS-Project/themes/contents/theme\n",
             { headers: { "User-Agent": "DCTS" } },
             res => {
                 let raw = "";

@@ -30,7 +30,7 @@ class ChatManager {
 
         if(!themes) return console.warn("No themes found")
 
-        PageRenderer.renderHTML(document.body,
+        await PageRenderer.renderHTML(document.body,
             `
                 <style>
                 .theme-page{
@@ -41,6 +41,7 @@ class ChatManager {
                     width: 100%;
                     max-height: 100%;
                     margin: 20px auto;
+                    padding: 0 20px;
                     
                     justify-content: center;
                     align-items: center;
@@ -67,6 +68,10 @@ class ChatManager {
                     background-color: hsl(from var(--main) h s calc(l * 3));
                     border: 2px solid hsl(from var(--main) h s calc(l * 3) / 20%);
                 }
+                .theme-page .theme-entry .name{
+                    font-weight: bold;
+                    color: hsl(from var(--main) h s calc(l * 12) / 100%);;
+                }
                 .theme-page .theme-entry .thumbnail-container{
                     overflow: hidden;
                     width: 300px;
@@ -86,9 +91,13 @@ class ChatManager {
                     overflow: hidden;
                 }
                 
+                .theme-page .theme-entry:hover .name{
+                    font-weight: bold;
+                    color: hsl(from var(--main) h s calc(l * 0.5) / 100%);;
+                }  
                 .theme-page .theme-entry:hover  {
                     background-color: hsl(from var(--main) h s calc(l * 12) / 100%);
-                    color: hsl(from var(--main) h s calc(l * 0.5) / 100%);
+                    color: hsl(from var(--main) h s calc(l * 4) / 100%);
                     font-weight: bold;
                 }
                 .theme-page .theme-entry:hover img {
@@ -101,30 +110,39 @@ class ChatManager {
                     <p onclick="window.location.reload()" style="margin-top: -2rem; cursor: pointer">« Back</p>
                     
                     <div class="theme-entries">
-                        ${buildThemeEntryBodyHTML(themes)}
                     </div>
                 </div>`
         )
 
-        function buildThemeEntryBodyHTML(themes){
-            let code = "";
 
+        let themeList = PageRenderer.Element().querySelector(".theme-entries");
+        await buildThemeEntryBodyHTML(themes, themeList)
+
+        async function buildThemeEntryBodyHTML(themes, element){
             if(themes.length > 0){
                 for(let theme of themes){
-                    code += getThemeEntryHTML(theme)
+                    element.insertAdjacentHTML("beforeend", await getThemeEntryHTML(theme));
                 }
             }
-
-            return code;
         }
 
-        function getThemeEntryHTML(theme){
+        async function getThemeEntryHTML(theme){
+            let themeResponse = await fetch(`https://raw.githubusercontent.com/DCTS-Project/themes/refs/heads/main/theme/${theme}/config.json`);
+            let themeMeta = null;
+            if(themeResponse.status === 200) themeMeta = await themeResponse.json();
+            if(!themeMeta){
+                console.error(`No theme meta found for theme ${theme}`)
+                return "";
+            }
+
+            console.log(themeMeta)
+
             return `
                 <div class="theme-entry" data-theme="${theme}">
                     <div class="thumbnail-container">
                         <img src="https://raw.githubusercontent.com/DCTS-Project/themes/refs/heads/main/theme/${theme}/thumbnail.png">
                     </div>
-                    <p>${theme}</p>
+                    <p><span class="name">${themeMeta?.name}</span> by ${themeMeta?.author}</p>
                 </div>
             
             `
@@ -133,19 +151,24 @@ class ChatManager {
         function initThemePageContext(){
             if(window.didInitthemePageContext) return;
 
-            console.log("did init")
-
             ContextMenu.registerClickEvent(
                 "theme page selector",
                 [
                     ".theme-page .theme-entries .theme-entry"
                 ],
                 async (data) => {
-                    console.log(data)
                     let theme = findAttributeUp(data.element, "data-theme");
                     if (!theme) {
                         console.warn("Couldnt get theme from element");
                         return;
+                    }
+
+                    if(!await downloadTheme(theme)){
+                        return showSystemMessage({
+                            title: `Error setting theme`,
+                            text: "It seems to be currently unavailable",
+                            type: "error"
+                        })
                     }
 
                     UserManager.setTheme(theme)
@@ -158,6 +181,26 @@ class ChatManager {
             )
 
             window.didInitthemePageContext = true;
+        }
+
+        async function downloadTheme(theme){
+            if(!theme) throw new Error("Missing theme name for download");
+
+            let localThemeRes = await fetch(`/css/themes/${theme}/${theme}.css`)
+            if(localThemeRes.status === 200) return true;
+
+            showSystemMessage({
+                title: `Downloading theme...`,
+                text: "",
+                type: "info"
+            })
+
+            if(localThemeRes.status === 404){
+                let downloadRes = await fetch(`/themes/download/${theme}`);
+                if(downloadRes.status === 200) return true;
+                console.error(downloadRes)
+                return false;
+            }
         }
     }
 
