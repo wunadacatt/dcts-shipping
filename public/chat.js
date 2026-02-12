@@ -8,7 +8,6 @@ document.addEventListener("error", (e) => {
     }
 }, true);
 
-
 function rewriteImg(img){
     if(!img || !img.src) return;
 
@@ -39,6 +38,18 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     }).observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    const observer = new MutationObserver(() => {
+        document.querySelectorAll('.profile_aboutme a:not([target])').forEach(a => {
+            a.setAttribute('target', '_blank');
+            a.setAttribute('rel', 'noopener noreferrer');
+        });
+    });
+
+    observer.observe(document.body, {
         childList: true,
         subtree: true
     });
