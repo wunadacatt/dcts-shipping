@@ -166,6 +166,7 @@ if (process.env.DB_HOST || process.env.DB_USER || process.env.DB_PASS || process
 await saveConfig(serverconfig);
 
 // nicer warning
+serverconfig.serverinfo.sql.enabled = true;
 if(!serverconfig?.serverinfo?.sql?.username){
     Logger.warn("Congrats, setup worked! Please go to the /configs/config.json file and enter the SQL information under 'sql'");
     process.exit(0);
