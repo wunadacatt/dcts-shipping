@@ -147,6 +147,7 @@ function addToRole() {
 }
 
 function createRole() {
+    console.log(socket.connected)
     socket.emit("createRole", { id: UserManager.getID(), token: UserManager.getToken() }, function (response) {
         alert(response.msg);
         window.location.reload();

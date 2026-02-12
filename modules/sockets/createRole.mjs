@@ -5,38 +5,34 @@ import { generateId, validateMemberId } from "../functions/main.mjs";
 
 export default (io) => (socket) => {
     // socket.on code here
-    socket.on('createRole', function (member, response) {
-        if (validateMemberId(member.id, socket) == true
-            && serverconfig.servermembers[member.id].token == member.token
+    socket.on('createRole', async function (member, response) {
+        if (validateMemberId(member?.id, socket, member?.token)
         ) {
-
             if (hasPermission(member.id, "manageRoles")) {
                 try {
                     var roleid = generateId(4);
-                    
-                    serverconfig.serverroles[roleid] = JSON.parse(
-                        `{
-                                    "info": {
-                                        "id": ${roleid},
-                                        "name": "New Role",
-                                        "icon": null,
-                                        "color": "#FFFFFF",
-                                        "deletable": 1,
-                                        "sortId": ${generateId(4)},
-                                        "displaySeperate": 0
-                                    },
-                                    "permissions": {
-                                        "readMessages": 1,
-                                        "sendMessages": 1,
-                                        "uploadFiles": 1
-                                    },
-                                    "members": [
-                                    ],
-                                    "token": []
-                                }`
-                    );
 
-                    saveConfig(serverconfig);                    
+                    serverconfig.serverroles[roleid] = {
+                        info: {
+                            id: roleid,
+                            name: "New Role",
+                            icon: null,
+                            color: "#FFFFFF",
+                            deletable: 1,
+                            sortId: generateId(4),
+                            displaySeperate: 0
+                        },
+                        permissions: {
+                            readMessages: 1,
+                            sendMessages: 1,
+                            uploadFiles: 1
+                        },
+                        members: [],
+                        token: []
+                    };
+
+
+                    saveConfig(serverconfig);
                     response({ type: "success", msg: "The role has been successfully created" });
                 }
                 catch (e) {
