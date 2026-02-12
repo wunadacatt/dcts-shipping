@@ -88,7 +88,7 @@ class UserManager {
                 <div id="profile_badge_container" data-gid="${isLauncher() ? await Crypto.GenerateGid(memberObj?.publicKey) : ""}"></div> 
                 
                 <div class="profile_aboutme">       
-                    ${memberObj?.aboutme?.trim()?.length > 0 ? `<hr><h2 class="profile_headline">About Me</h2>${memberObj.aboutme}` : ""}
+                    ${memberObj?.aboutme?.trim()?.length > 0 ? `<hr><h2 class="profile_headline">About Me</h2>${sanitizeHtmlForRender(memberObj.aboutme)}` : ""}
                     
                     
                     <div class="profile_meta_container">

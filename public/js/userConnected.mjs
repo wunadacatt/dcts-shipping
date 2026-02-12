@@ -164,7 +164,7 @@ export default (io) => (socket) => {
         );
         member.aboutme = truncateText(
             xssFilters.inHTMLData(normaliseString(member.aboutme)),
-            500,
+            1000,
         );
         member.icon = xssFilters.inHTMLData(normaliseString(member.icon));
         member.banner = xssFilters.inHTMLData(normaliseString(member.banner));

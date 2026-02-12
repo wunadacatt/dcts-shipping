@@ -28,7 +28,7 @@ const SANITIZE_OPTIONS = {
         'img',
         'mark',
         "button",
-        "iframe"
+        "iframe" // needed for embeds
     ]
     ,
 
@@ -39,7 +39,7 @@ const SANITIZE_OPTIONS = {
         'src',
         'alt',
         'class',
-        'style',
+        //'style', // needs to be removed but with testing
         'data-id',
         'controls',
         'title',
