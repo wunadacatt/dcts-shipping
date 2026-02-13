@@ -320,11 +320,19 @@ function getOrCreateUserCard(memberId, isScreen = false) {
           <div class="vc-volpct">${vol}%</div>
         </div>
     
-        ${isScreen ? "" : `
-          <div class="username" data-member-id="${memberId}">User ${memberId}</div>
+           ${isScreen ? `
+              <div class="username" data-member-id="${memberId}">
+                <span class="uname">User ${memberId}</span>
+                <span class="vc-badge">&bullet; Screen</span>
+              </div>
+        ` : `
+              <div class="username" data-member-id="${memberId}">
+                <span class="uname">User ${memberId}</span>
+              </div>
         `}
       </div>
     `;
+
 
     grid.insertAdjacentHTML("beforeend", html);
     card = document.getElementById(cardId);
@@ -333,9 +341,9 @@ function getOrCreateUserCard(memberId, isScreen = false) {
         if (!card || !document.body.contains(card)) return;
         if (member) {
             const avatar = card.querySelector(".vc-avatar");
-            const name = card.querySelector(".username");
+            const uname = card.querySelector(".username .uname");
             if (avatar) avatar.src = member.icon || "/img/default_icon.png";
-            if (name) name.innerText = member.name;
+            if (uname) uname.innerText = member.name;
         }
     });
 
