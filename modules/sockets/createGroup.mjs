@@ -48,12 +48,12 @@ export default (io) => (socket) => {
                             "categories": {
                                 "${categoryId}": {
                                     "info": {
-                                        "id": ${categoryId},
+                                        "id": "${categoryId}",
                                         "name": "General"
                                     },
                                     "channel": {
                                         "${channelId}": {
-                                            "id": ${channelId},
+                                            "id": "${channelId}",
                                             "name": "chat",
                                             "type": "text",
                                             "description": "Default Channel Description",

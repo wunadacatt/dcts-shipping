@@ -3,14 +3,13 @@ class VoIP {
         this.APPLICATION_SERVER_URL = applicationServerUrl;
         this.LIVEKIT_URL = livekitUrl;
         this.room = null;
-        this.participants = new Map(); // participantId { audioTrack, videoTrack, screenTrack }
+        this.participants = new Map();
         this.streamSettings = {
             resolution: "1920x1080",
             frameRate: 60,
             maxBitrate: 5_000_000,
         };
 
-        // Callbacks
         this.onJoin = null;
         this.onLeave = null;
         this.onScreenshareBegin = null;
@@ -19,18 +18,24 @@ class VoIP {
         this.onSpeaking = null;
         this.isScreensharing = false;
 
+        this._micPub = null;
 
         this.configureUrls();
     }
 
     configureUrls() {
-        if (!this.APPLICATION_SERVER_URL) {
-            this.APPLICATION_SERVER_URL = window.location.origin
-        }
+        if (!this.APPLICATION_SERVER_URL) this.APPLICATION_SERVER_URL = window.location.origin;
+        if (!this.LIVEKIT_URL) throw new TypeError("No LiveKit URL set.");
+    }
 
-        if (!this.LIVEKIT_URL) {
-            throw new TypeError("No LiveKit URL set.")
-        }
+    _lp() {
+        return this.room?.localParticipant || null;
+    }
+
+    _micEnabled() {
+        const lp = this._lp();
+        if (!lp) return false;
+        return !!lp.isMicrophoneEnabled;
     }
 
     async joinRoom(roomName, userName, memberId, channelId) {
@@ -41,54 +46,38 @@ class VoIP {
 
             this.storeTrack(participant.identity, track, isScreen);
 
-            // screenshare
-            if (isScreen && this.onScreenshareBegin) {
-                this.onScreenshareBegin(participant.identity, track);
-            }
-
-            if (this.onTrackSubscribed) {
-                this.onTrackSubscribed(track, participant.identity, isScreen);
-            }
+            if (isScreen && this.onScreenshareBegin) this.onScreenshareBegin(participant.identity, track);
+            if (this.onTrackSubscribed) this.onTrackSubscribed(track, participant.identity, isScreen);
         });
 
-        // people who are speaking
         this.room.on(LivekitClient.RoomEvent.ActiveSpeakersChanged, (speakers) => {
             speakers.forEach(participant => {
                 const id = participant.identity;
-                if(this.onSpeaking) this.onSpeaking(id);
+                if (this.onSpeaking) this.onSpeaking(id);
             });
         });
 
-
-        // when people leave
         this.room.on(LivekitClient.RoomEvent.ParticipantDisconnected, (participant) => {
             if (this.onLeave) this.onLeave(participant.identity);
         });
-
 
         this.room.on(LivekitClient.RoomEvent.TrackUnsubscribed, (track, _publication, participant) => {
             const isScreen = track.source === "screen" || track.source === LivekitClient.Track.Source.ScreenShare;
 
             this.removeTrack(participant.identity, track, isScreen);
 
-            if (isScreen && this.onScreenshareEnd) {
-                this.onScreenshareEnd(participant.identity);
-            }
+            if (isScreen && this.onScreenshareEnd) this.onScreenshareEnd(participant.identity);
         });
 
         try {
             const token = await this.getToken(roomName, userName, memberId, channelId);
             await this.room.connect(this.LIVEKIT_URL, token);
 
-            // local mic
-            const audioTrack = await LivekitClient.createLocalAudioTrack({
+            this._micPub = await this.room.localParticipant.setMicrophoneEnabled(true, {
                 echoCancellation: true,
                 noiseSuppression: true,
                 autoGainControl: true
             });
-
-            await this.room.localParticipant.publishTrack(audioTrack);
-            this.room.localParticipant.setMicrophoneEnabled(true);
 
             if (this.onJoin) this.onJoin(userName);
         } catch (e) {
@@ -152,31 +141,19 @@ class VoIP {
             const track = pub.track;
             if (!track) return;
 
-            if (track.source.includes("screen") || track.source === LivekitClient.Track.Source.ScreenShare) {
-                // unpublish
-                this.room.localParticipant.unpublishTrack(track).catch(() => {});
+            const src = pub.source ?? track.source;
+            const isScreen = src === LivekitClient.Track.Source.ScreenShare || src === "screen";
+            if (!isScreen) return;
 
-                // remove track vom dom
-                track.detach().forEach(el => el.remove());
-
-                // stop streams, including audio
-                if (track.mediaStreamTrack) {
-                    track.mediaStreamTrack.stop();
-                }
-
-                // only kill livekit audio
-                if (track.kind === "audio" && typeof track.stop === "function") {
-                    track.stop();
-                }
-
-                this.isScreensharing = false
-            }
+            this.room.localParticipant.unpublishTrack(track).catch(() => {});
+            track.detach().forEach(el => el.remove());
+            if (track.mediaStreamTrack) track.mediaStreamTrack.stop();
+            if (track.kind === "audio" && typeof track.stop === "function") track.stop();
         });
 
+        this.isScreensharing = false;
         if (this.onScreenshareEnd) this.onScreenshareEnd(participantId);
     }
-
-
 
     async shareScreen(includeAudio = false) {
         if (!this.room?.localParticipant) return;
@@ -189,7 +166,6 @@ class VoIP {
                 resolution: this.streamSettings.resolution,
                 frameRate: this.streamSettings.frameRate,
                 maxBitrate: this.streamSettings.maxBitrate,
-                //simulcast: true,
                 codec: "h264"
             },
         });
@@ -208,7 +184,7 @@ class VoIP {
                 if (this.onScreenshareEnd) this.onScreenshareEnd(participantId);
             });
 
-            this.isScreensharing = true
+            this.isScreensharing = true;
         }
     }
 
@@ -228,23 +204,26 @@ class VoIP {
         return token.token;
     }
 
-    muteMic() {
+    async muteMic() {
         if (!this.room?.localParticipant) return;
-        this.room.localParticipant.setMicrophoneEnabled(false);
+        await this.room.localParticipant.setMicrophoneEnabled(false).catch(()=>{});
     }
 
-    unmuteMic() {
+    async unmuteMic() {
         if (!this.room?.localParticipant) return;
-        this.room.localParticipant.setMicrophoneEnabled(true);
+        await this.room.localParticipant.setMicrophoneEnabled(true).catch(()=>{});
     }
+
 
     isMuted() {
-        if (!this.room?.localParticipant) return;
-        return this.room.localParticipant.isMicrophoneEnabled;
+        return !this._micEnabled();
     }
 
-    toggleMic() {
-        this.room.localParticipant.setMicrophoneEnabled(!this.isMuted());
+    async toggleMic() {
+        if (!this.room?.localParticipant) return;
+        const nextEnabled = this.isMuted();
+        await this.room.localParticipant.setMicrophoneEnabled(nextEnabled);
+        return nextEnabled;
     }
 
     async leaveRoom() {
