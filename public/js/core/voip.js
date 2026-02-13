@@ -91,15 +91,22 @@ class VoIP {
             let pub;
             try {
                 if (track.kind === "video") {
-                    pub = await this.room.localParticipant.publishTrack(track, { source: LivekitClient.Track.Source.ScreenShare });
+                    pub = await this.room.localParticipant.publishTrack(track, {
+                        source: LivekitClient.Track.Source.ScreenShare,
+                        audioPreset: LivekitClient.AudioPresets.musicHighQuality
+                    });
                 } else if (track.kind === "audio") {
-                    pub = await this.room.localParticipant.publishTrack(track, { source: LivekitClient.Track.Source.ScreenShareAudio });
+                    pub = await this.room.localParticipant.publishTrack(track, {
+                        source: LivekitClient.Track.Source.ScreenShareAudio,
+                        audioPreset: LivekitClient.AudioPresets.musicHighQuality
+                    });
                 } else {
                     pub = await this.room.localParticipant.publishTrack(track);
                 }
-            } catch(e) {
+            } catch (e) {
                 pub = await this.room.localParticipant.publishTrack(track);
             }
+
 
             if (pub) this._screenPubs.push(pub);
 
@@ -132,7 +139,16 @@ class VoIP {
     }
 
     async joinRoom(roomName, userName, memberId, channelId) {
-        this.room = new LivekitClient.Room();
+        this.room = new LivekitClient.Room({
+            publishDefaults: {
+                audioPreset: LivekitClient.AudioPresets.musicHighQuality
+            },
+            audioCaptureDefaults: {
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: false
+            }
+        });
 
         this.room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
             const src = publication?.source ?? track?.source;
@@ -177,7 +193,7 @@ class VoIP {
             this._micPub = await this.room.localParticipant.setMicrophoneEnabled(true, {
                 echoCancellation: true,
                 noiseSuppression: true,
-                autoGainControl: true
+                autoGainControl: false
             });
 
             if (this.onJoin) this.onJoin(userName);
@@ -348,7 +364,11 @@ class VoIP {
 
     async unmuteMic() {
         if (!this.room?.localParticipant) return;
-        await this.room.localParticipant.setMicrophoneEnabled(true).catch(()=>{});
+        await this.room.localParticipant.setMicrophoneEnabled(true, {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: false
+        }).catch(()=>{});
     }
 
 
@@ -359,7 +379,11 @@ class VoIP {
     async toggleMic() {
         if (!this.room?.localParticipant) return;
         const nextEnabled = this.isMuted();
-        await this.room.localParticipant.setMicrophoneEnabled(nextEnabled);
+        await this.room.localParticipant.setMicrophoneEnabled(nextEnabled, {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: false
+        });
         return nextEnabled;
     }
 

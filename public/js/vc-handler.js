@@ -624,12 +624,14 @@ async function toggleScreenshare() {
     }
 
     customPrompts.showPrompt("Stream Settings", `
-        <div style="margin:20px 0;">
+       <div style="margin:20px 0;">
             <div class="prompt-form-group">
                 <label class="prompt-label">Resolution</label>
                 <select id="res" class="prompt-select">
                     <option value="1280x720">720p</option>
                     <option value="1920x1080" selected>1080p</option>
+                    <option value="2560x1440">2K (1440p)</option>
+                    <option value="3840x2160">4K (2160p)</option>
                 </select>
             </div>
             <div class="prompt-form-group">
@@ -637,6 +639,7 @@ async function toggleScreenshare() {
                 <select id="fps" class="prompt-select">
                     <option value="30">30</option>
                     <option value="60" selected>60</option>
+                    <option value="120">120</option>
                 </select>
             </div>
             <div class="prompt-form-group">
@@ -645,6 +648,9 @@ async function toggleScreenshare() {
                     <option value="3000000">3 Mbit</option>
                     <option value="8000000" selected>8 Mbit</option>
                     <option value="12000000">12 Mbit</option>
+                    <option value="20000000">20 Mbit</option>
+                    <option value="35000000">35 Mbit</option>
+                    <option value="50000000">50 Mbit</option>
                 </select>
             </div>
         </div>
