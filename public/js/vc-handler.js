@@ -77,7 +77,6 @@ function rebuildVcUiFromTracks(){
                 video.muted = true;
                 video.style.display = "block";
                 video.play().catch(()=>{});
-
                 const mst = p.videoTrack.mediaStreamTrack;
                 if(mst) lastUserStream = new MediaStream([mst]);
             }
@@ -91,7 +90,6 @@ function rebuildVcUiFromTracks(){
                 video.muted = true;
                 video.style.display = "block";
                 video.play().catch(()=>{});
-
                 const mst = p.screenTrack.mediaStreamTrack;
                 if(mst){
                     screenStreams[memberId] = new MediaStream([mst]);
@@ -108,19 +106,28 @@ function rebuildVcUiFromTracks(){
         if(p.audioTrack){
             const audioId = `audio-global-${memberId}`;
             document.getElementById(audioId)?.remove();
-
             const audio = p.audioTrack.attach();
             audio.id = audioId;
             audio.autoplay = true;
             audio.setAttribute("data-member-id", memberId);
             audio.muted = isDeafened || memberId === UserManager.getID();
             document.body.appendChild(audio);
-
             hookVcAudio(memberId, false, audio);
+        }
+
+        if(p.screenAudioTrack){
+            const audioId = `audio-global-${memberId}-screen`;
+            document.getElementById(audioId)?.remove();
+            const audio = p.screenAudioTrack.attach();
+            audio.id = audioId;
+            audio.autoplay = true;
+            audio.setAttribute("data-member-id", memberId);
+            audio.muted = isDeafened || memberId === UserManager.getID();
+            document.body.appendChild(audio);
+            hookVcAudio(memberId, true, audio);
         }
     });
 }
-
 
 document.addEventListener("DOMContentLoaded", async event => {
 

@@ -118,7 +118,7 @@ class VoIP {
             try { this._cleanupDetachedEls(track.detach()); } catch(e) {}
 
             if (this.onScreenshareBegin) this.onScreenshareBegin(participantId, track);
-            if (this.onTrackSubscribed) this.onTrackSubscribed(track, participantId, true);
+            if (this.onTrackSubscribed && track.kind === "video") this.onTrackSubscribed(track, participantId, true);
 
             track.on("ended", () => {
                 this.stopScreenshare().catch(()=>{});
