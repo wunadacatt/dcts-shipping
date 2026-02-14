@@ -280,8 +280,11 @@ import {
 import {migrateOldMessagesToNewMessageSystemWithoutEncoding} from "./modules/functions/migrations/messageMigration.mjs";
 import JSONTools from "@hackthedev/json-tools";
 import {initPaymentSystem, paymentConfig} from "./modules/functions/payments.mjs";
+<<<<<<< Updated upstream
 import {emitErrorToTestingClient} from "./modules/sockets/onErrorTesting.mjs";
 import {getCache, setCache} from "./modules/functions/ip-cache.mjs";
+=======
+>>>>>>> Stashed changes
 
 /*
     Files for the plugin system
@@ -819,18 +822,14 @@ server = http.createServer(app)
 process.on("uncaughtException", function (err) {
     // Handle the error safely
     Logger.error("UNEXPECTED ERROR");
-    //Logger.error(err.message);
-    //Logger.error("Details: ");
-    Logger.error(err);
-
-    emitErrorToTestingClient(err)
+    Logger.error(err.message);
+    Logger.error("Details: ");
+    Logger.error(err.stack);
 });
 
 process.on("unhandledRejection", (reason) => {
     Logger.error("UNHANDLED PROMISE REJECTION");
-    Logger.error(reason);
-
-    emitErrorToTestingClient(reason)
+    Logger.error(reason?.stack || reason);
 });
 
 

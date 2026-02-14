@@ -259,12 +259,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         let editElement = getMessageElementFromId(message.messageId);
         try{ message.message = await text2Emoji(message.message) } catch {}
-        //editElement.innerHTML = message.message;
+        editElement.innerHTML = message.message;
 
         let convertedMentions = await convertMention(message);
-        editElement.innerHTML= sanitizeHtmlForRender(convertedMentions.text)
+        editElement.innerHTML= convertedMentions.text
 
-        editElement.innerHTML += sanitizeHtmlForRender(getMessageEditedHTML(message));
+        editElement.innerHTML += getMessageEditedHTML(message);
         editElement.innerHTML += createMsgActions(message.messageId);
 
     });
