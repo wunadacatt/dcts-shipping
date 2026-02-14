@@ -15,7 +15,7 @@
     "@hackthedev/dsync": "^1.0.8",
     "@hackthedev/dsync-auth": "^1.0.9",
     "@hackthedev/dsync-files": "^1.0.9",
-    "@hackthedev/dsync-ipsec": "^1.0.7",
+    "@hackthedev/dsync-ipsec": "^1.0.8",
     "@hackthedev/dsync-pay": "^1.0.8",
     "@hackthedev/dsync-ratelimit": "^1.0.1",
     "@hackthedev/dsync-shop": "^1.0.1",

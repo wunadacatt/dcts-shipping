@@ -10,7 +10,7 @@
         "@hackthedev/dsync": "^1.0.8",
         "@hackthedev/dsync-auth": "^1.0.9",
         "@hackthedev/dsync-files": "^1.0.9",
-        "@hackthedev/dsync-ipsec": "^1.0.7",
+        "@hackthedev/dsync-ipsec": "^1.0.8",
         "@hackthedev/dsync-pay": "^1.0.8",
         "@hackthedev/dsync-ratelimit": "^1.0.1",
         "@hackthedev/dsync-shop": "^1.0.1",
@@ -60,7 +60,7 @@
 
     "@hackthedev/dsync-files": ["@hackthedev/dsync-files@1.0.9", "", {}, "sha512-JAgUvJZmmg5a2/6HQpcSaxr2nJc/w8i3T9o15CCs1kgb0O2Z9flZZCwgKScLuRFzjOhW79ikkS9wrPW9TUZUrA=="],
 
-    "@hackthedev/dsync-ipsec": ["@hackthedev/dsync-ipsec@1.0.7", "", {}, "sha512-XDMHYfV+/k8qPVd9Nz3WpggVi686cvKCu4gMZ1/KvDUeRd1OgfeWDnB/cNohhkpzf/kFGOnrPt4OlPX4xaroCg=="],
+    "@hackthedev/dsync-ipsec": ["@hackthedev/dsync-ipsec@1.0.8", "", {}, "sha512-G82e8xpkCr4mKDm743LB7EA3V6Vgtg4+cpm66p2xtDmiybt+Slk8/cOva0E7T2YzR9CW0QkDbjk0z+EeNU6BoQ=="],
 
     "@hackthedev/dsync-pay": ["@hackthedev/dsync-pay@1.0.8", "", {}, "sha512-P8VWLXEhVy86JidCx1fyFbsCdi+3rcFNmZKaq8orqcvUsUvK648RWi16nCIIl6sjGIo3TDOoVql7k0jmvRlbBg=="],
 
