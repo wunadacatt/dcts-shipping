@@ -808,9 +808,13 @@ export function startServer() {
     });
 }
 
+const fileContents = fs.readFileSync(process.env.LIVEKIT_YAML_PATH, 'utf8');
+const data = yaml.load(fileContents);
 
-const API_KEY = process.env.LIVEKIT_KEY || serverconfig.serverinfo.livekit.key;
-const API_SECRET = process.env.LIVEKIT_SECRET || serverconfig.serverinfo.livekit.secret;
+const firstEntry = Object.entries(data.keys || {})[0];
+
+const API_KEY = firstEntry?.[0] || serverconfig.serverinfo.livekit.key;
+const API_SECRET = firstEntry?.[1] || serverconfig.serverinfo.livekit.secret;
 
 const webhookReceiver = new WebhookReceiver(API_KEY, API_SECRET);
 
@@ -821,6 +825,8 @@ app.post("/token", async (req, res) => {
         res.status(400).json({errorMessage: "roomName and participantName are required"});
         return;
     }
+
+    console.log(API_KEY, API_SECRET)
 
     const at = new AccessToken(API_KEY, API_SECRET, {identity: participantName});
     at.addGrant({roomJoin: true, room: roomName});
