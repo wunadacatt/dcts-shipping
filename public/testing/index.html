@@ -6,9 +6,7 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    <script src="/js/core/socket.io.js"></script>
-    <script src="/js/core/UserManager.js"></script>
-    <script src="/js/core/CookieManager.js"></script>
+    <script src="../js/core/socket.io.js"></script>
 
     <title>Document</title>
 </head>
@@ -23,57 +21,30 @@
 <script>
     var socket = io.connect()
 
-    async function testLogin(){
-        // required
-        socket.emit("userConnected", {
-            id: UserManager.getID(),
-            token: UserManager.getToken(),
-            pow: {
-                challenge: localStorage.getItem("pow_challenge"),
-                solution: localStorage.getItem("pow_solution")
-            }
-        }, function (response) {
+    socket.emit("getTestFiles", {}, async function (response){
+        console.log(response)
+        let testsList = document.getElementById("tests");
 
-        })
-    }
+        if(response?.error == null && response?.files?.length > 0){
 
-    document.addEventListener("DOMContentLoaded", async function() {
+            for(let file of response?.files){
 
-        testLogin();
-
-
-
-        socket.on('onErrorTesting', function (data) {
-            console.log("Received onErrorTesting", data);
-        });
-
-        socket.emit("getTestFiles", {}, async function (response){
-            console.log(response)
-            let testsList = document.getElementById("tests");
-
-            if(response?.error == null && response?.files?.length > 0){
-
-                for(let file of response?.files){
-
-                    let test = document.createElement("li");
-                    test.innerHTML = file;
-                    test.onclick = async function() {
-                        const mod = await import(`/testing/tests/${file}?v=${Math.random()}`);
-                        if (mod.test) {
-                            let result = mod.test();
-                            console.log("test result: ", result);
-                        }
+                let test = document.createElement("li");
+                test.innerHTML = file;
+                test.onclick = async function() {
+                    const mod = await import(`/testing/tests/${file}?v=${Math.random()}`);
+                    if (mod.test) {
+                        let result = mod.test();
+                        console.log("test result: ", result);
                     }
-
-                    testsList.appendChild(test);
-                    testsList.insertAdjacentElement("beforeend", test)
                 }
+                testsList.appendChild(test);
 
+                testsList.insertAdjacentElement("beforeend", test)
             }
-        })
+
+        }
     })
-
-
 
     async function importJsFile(url) {
         return new Promise((resolve, reject) => {

@@ -660,7 +660,7 @@ export function checkConfigAdditions() {
         "1111": {
             "info": {
                 "id": 1111,
-                "name": "Administrator",
+                "name": "Admininistrator",
                 "icon": null,
                 "color": "#ff0000",
                 "deletable": 0,
@@ -1043,9 +1043,6 @@ export function generateId(length) {
 }
 
 export function validateMemberId(id, socket, token, bypass = false) {
-    id = String(id)
-    token = String(token)
-
     if (bypass === false && socket) {
         checkRateLimit(socket);
     }
