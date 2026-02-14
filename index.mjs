@@ -281,6 +281,7 @@ import {migrateOldMessagesToNewMessageSystemWithoutEncoding} from "./modules/fun
 import JSONTools from "@hackthedev/json-tools";
 import {initPaymentSystem, paymentConfig} from "./modules/functions/payments.mjs";
 import {getCache, setCache} from "./modules/functions/ip-cache.mjs";
+import {emitErrorToTestingClient} from "./modules/sockets/onErrorTesting.mjs";
 
 /*
     Files for the plugin system
@@ -821,11 +822,13 @@ process.on("uncaughtException", function (err) {
     Logger.error(err.message);
     Logger.error("Details: ");
     Logger.error(err.stack);
+    emitErrorToTestingClient(err)
 });
 
 process.on("unhandledRejection", (reason) => {
     Logger.error("UNHANDLED PROMISE REJECTION");
     Logger.error(reason?.stack || reason);
+    emitErrorToTestingClient(err)
 });
 
 

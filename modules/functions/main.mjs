@@ -660,7 +660,7 @@ export function checkConfigAdditions() {
         "1111": {
             "info": {
                 "id": 1111,
-                "name": "Admininistrator",
+                "name": "Administrator",
                 "icon": null,
                 "color": "#ff0000",
                 "deletable": 0,
@@ -1039,10 +1039,20 @@ export function limitString(text, limit) {
 }
 
 export function generateId(length) {
-    return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
+    let result = '1';
+    const characters = '0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < length - 1) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        counter += 1;
+    }
+    return result;
 }
 
 export function validateMemberId(id, socket, token, bypass = false) {
+    id = String(id)
+
     if (bypass === false && socket) {
         checkRateLimit(socket);
     }
@@ -1079,7 +1089,7 @@ export function validateMemberId(id, socket, token, bypass = false) {
         }
     }
 
-    return id.length === 12 && isNaN(id) === false;
+    return id.length === 12;
 }
 
 export function escapeHtml(text) {
