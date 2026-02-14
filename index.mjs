@@ -828,7 +828,7 @@ process.on("uncaughtException", function (err) {
 process.on("unhandledRejection", (reason) => {
     Logger.error("UNHANDLED PROMISE REJECTION");
     Logger.error(reason?.stack || reason);
-    emitErrorToTestingClient(err)
+    emitErrorToTestingClient(reason)
 });
 
 
@@ -865,7 +865,7 @@ app.use(
 export let ipsec = new dSyncIPSec({
     checkCache: async (ip) => {
         let ipInfoRow = await getCache(ip, "ip_cache");
-        if(ipInfoRow.length === 0){
+        if(ipInfoRow?.length === 0){
             await setCache(ip, "ip_cache");
         }
     },
