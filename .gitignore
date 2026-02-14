@@ -16,3 +16,6 @@ privatekey.json
 
 .idea
 .package-lock.json
+dcts/configs/config.json
+dcts/configs/payments.json
+dcts/plugins/settings.json
