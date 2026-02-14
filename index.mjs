@@ -477,17 +477,12 @@ const tables = [
     {
         name: "message_logs",
         columns: [
-            {name: "id", type: "int(100) NOT NULL"},
+            {name: "id", type: "int(100) NOT NULL PRIMARY KEY UNIQUE KEY AUTO_INCREMENT"},
             {name: "authorId", type: "varchar(100) NOT NULL"},
             {name: "messageId", type: "varchar(100) NOT NULL"},
             {name: "room", type: "text NOT NULL"},
             {name: "message", type: "longtext NOT NULL"},
-        ],
-        keys: [
-            {name: "PRIMARY KEY", type: "(id)"},
-            {name: "UNIQUE KEY", type: "id (id)"},
-        ],
-        autoIncrement: "id int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55",
+        ]
     },
     {
         name: "url_cache",

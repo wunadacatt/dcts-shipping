@@ -61,6 +61,17 @@ export async function checkMigrations(){
         Logger.space();
     }
 
+    // inox id error
+    migrationTask = await getMigrationTask("fixAutoIncrementInMessageLogs", true);
+    if(migrationTask && migrationTask?.done === 0){
+        await doBackup()
+        await queryDatabase(
+            "ALTER TABLE `message_logs` MODIFY COLUMN `id` INT(100) NOT NULL AUTO_INCREMENT",
+            []
+        );
+        await completeMigrationTask("fixAutoIncrementInMessageLogs")
+    }
+
     async function doBackup(){
         if(didBackup) return;
         didBackup = true;
