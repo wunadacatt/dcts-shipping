@@ -939,6 +939,22 @@ export function startServer() {
     var port = process.env.PORT || serverconfig.serverinfo.port;
     server.listen(port, function () {
         Logger.info("Server is running on port " + port);
+        Logger.info("LIVEKIT_YAML_PATH:", process.env.LIVEKIT_YAML_PATH);
+        
+        const fileContents = fs.readFileSync(process.env.LIVEKIT_YAML_PATH, 'utf8');
+        const data = yaml.load(fileContents);
+
+        const firstEntry = Object.entries(data.keys || {})[0];
+
+        const API_KEY = firstEntry?.[0] || serverconfig.serverinfo.livekit.key;
+        const API_SECRET = firstEntry?.[1] || serverconfig.serverinfo.livekit.secret;
+
+        Logger.info("LIVEKIT_YAML_PATH:", process.env.LIVEKIT_YAML_PATH);
+        Logger.info("YAML keys loaded:", data.keys);
+        Logger.info("First entry from YAML:", firstEntry);
+
+        Logger.info("API_KEY:", API_KEY);
+        Logger.info("API_SECRET:", API_SECRET);
 
         if (serverconfig.serverinfo.setup == 0) {
             var adminToken = generateId(64);
@@ -975,9 +991,20 @@ export function startServer() {
     });
 }
 
-const API_KEY = process.env.LIVEKIT_KEY || serverconfig.serverinfo.livekit.key;
-const API_SECRET =
-    process.env.LIVEKIT_SECRET || serverconfig.serverinfo.livekit.secret;
+const fileContents = fs.readFileSync(process.env.LIVEKIT_YAML_PATH, 'utf8');
+const data = yaml.load(fileContents);
+
+const firstEntry = Object.entries(data.keys || {})[0];
+
+const API_KEY = firstEntry?.[0] || serverconfig.serverinfo.livekit.key;
+const API_SECRET = firstEntry?.[1] || serverconfig.serverinfo.livekit.secret;
+
+console.log("LIVEKIT_YAML_PATH:", process.env.LIVEKIT_YAML_PATH);
+console.log("YAML keys loaded:", data.keys);
+console.log("First entry from YAML:", firstEntry);
+
+console.log("API_KEY:", API_KEY);
+console.log("API_SECRET:", API_SECRET);
 
 const webhookReceiver = new WebhookReceiver(API_KEY, API_SECRET);
 

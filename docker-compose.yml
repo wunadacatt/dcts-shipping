@@ -1,21 +1,22 @@
 services:
   dcts-app:
-    image: ghcr.io/hackthedev/dcts-shipping:latest
+    image: ghcr.io/wunadacatt/dcts-shipping:beta
     depends_on:
-      - dcts-mariadb
-      - dcts-livekit
+      dcts-mariadb:
+        condition: service_healthy
+      dcts-redis:
+        condition: service_healthy
+      dcts-livekit:
+        condition: service_started
     environment:
       - DB_HOST=dcts-mariadb
       - DB_USER=dcts
       - DB_PASS=dcts
       - DB_NAME=dcts
-      - LIVEKIT_URL=your_proxied_url # e.g., livekit.example.com
-      - LIVEKIT_KEY=change_me
-      - LIVEKIT_SECRET=change_me
-      - DEBUG=false # optional
+      - LIVEKIT_URL=lk.wunadacat.com
+      - LIVEKIT_YAML_PATH=/etc/livekit.yaml
+      - DEBUG=true # optional
     restart: unless-stopped
-    ports:
-      - 2052:2052
     volumes:
       - ./dcts/sv:/app/sv
       - ./dcts/configs:/app/configs
@@ -33,27 +34,49 @@ services:
       - MARIADB_PASSWORD=dcts
     volumes:
       - dcts-mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   dcts-redis:
     image: redis:alpine
     volumes:
       - dcts-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   dcts-livekit:
-    image: livekit/livekit-server:latest
-    command: --config /etc/livekit.yaml
+    build: ./livekit
     volumes:
-      - ./livekit.yaml:/etc/livekit.yaml # LiveKit Config (https://github.com/hackthedev/dcts-shipping/blob/main/livekit.yaml)
+      - ./livekit.yaml:/etc/livekit.yaml
     ports:
-      - 7880:7880 # LiveKit API/WebSocket, must be reverse proxied
-      - 7881:7881 # ICE/TCP signaling, expose directly
-      - 7882:7882/udp # ICE/UDP mux, expose directly
-      # Optional TURN ports
+      - 7881:7881
+      - 7882:7882/udp
       - 3478:3478/udp
       - 5349:5349/tcp
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - dcts-livekit
 
 volumes:
   dcts-mariadb-data:
   dcts-redis-data:
-
-
+  caddy_data:
+  caddy_config:
