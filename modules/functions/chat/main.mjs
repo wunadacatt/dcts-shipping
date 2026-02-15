@@ -336,14 +336,19 @@ export async function lookupIP(ip){
     if(!ipCache){
         // we only return if its not found so i can have debug data for localhost ips
         if(isLocalhostIp(ip)) return {error: `IP ${ip} was local.`};
-        let ipRequest = await fetch(`https://api.ipapi.is/?q=${ip}`);
-        if(ipRequest.status === 200){
-            let ipData = await ipRequest.json();
-            await updateIpCache(ip, ipData);
-            return ipData;
+        try{
+            let ipRequest = await fetch(`https://api.ipapi.is/?q=${ip}`);
+            if(ipRequest.status === 200){
+                let ipData = await ipRequest.json();
+                await updateIpCache(ip, ipData);
+                return ipData;
+            }
+            else{
+                return {error: "Failed to fetch IP data"};
+            }
         }
-        else{
-            return {error: "Failed to fetch IP data"};
+        catch (err){
+            Logger.debug(err)
         }
     }
     else{
