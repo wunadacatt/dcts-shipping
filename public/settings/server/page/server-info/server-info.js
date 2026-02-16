@@ -107,7 +107,7 @@ function displayServerInfoSettings(response){
 
     mainSettings.insertAdjacentElement("beforeend",
         JsonEditor.getSettingElement(
-            response.serverinfo.registration.enabled,
+            !response.serverinfo.registration.enabled,
             "Invite Only",
             "If new members need an invite code to be able to register a new account.",
             v => {
