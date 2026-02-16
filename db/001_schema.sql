@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS message_reactions (
     messageId VARCHAR(100) NOT NULL,
     emojiHash LONGTEXT NOT NULL,
     memberId VARCHAR(100) NOT NULL,
-    react_timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    react_timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (reactionId)
 );
 
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS cache (
     identifier VARCHAR(255) NOT NULL UNIQUE,
     type VARCHAR(255) NOT NULL,
     data LONGTEXT NOT NULL,
-    last_update DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    last_update DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (rowId)
 );
 
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS inbox (
     data LONGTEXT NOT NULL,
     type VARCHAR(250) NOT NULL,
     isRead BIGINT NOT NULL DEFAULT 0,
-    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (inboxId)
 );
 
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS message_logs (
     authorId VARCHAR(100) NOT NULL,
     messageId VARCHAR(100) NOT NULL,
     room TEXT NOT NULL,
-    message LONGTEXT NOT NULL
+    message LONGTEXT NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS message_logs (
 CREATE TABLE IF NOT EXISTS url_cache (
     id INT NOT NULL AUTO_INCREMENT,
     url LONGTEXT NOT NULL UNIQUE,
-    media_type TEXT NOT NULL
+    media_type TEXT NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS reports (
     reportType TEXT NOT NULL,
     reportData LONGTEXT NULL,
     reportNotes LONGTEXT NULL,
-    reportStatus VARCHAR(100) NOT NULL DEFAULT 'pending'
+    reportStatus VARCHAR(100) NOT NULL DEFAULT 'pending',
     PRIMARY KEY (id)
 );
 
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS reports (
 CREATE TABLE IF NOT EXISTS dms_threads (
     threadId VARCHAR(100) NOT NULL,
     type VARCHAR(50) NOT NULL,
-    title TEXT NULL
+    title TEXT NULL,
     PRIMARY KEY (threadId)
 );
 
@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS dms_message_logs (
     threadId VARCHAR(100) NOT NULL,
     authorId VARCHAR(100) NOT NULL,
     message LONGTEXT NOT NULL,
-    loggedAt DATETIME NOT NULL
+    loggedAt DATETIME NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -149,7 +149,7 @@ CREATE TABLE IF NOT EXISTS dms_messages (
     createdAt DATETIME NOT NULL,
     supportIdentity VARCHAR(20) NOT NULL DEFAULT 'self',
     displayName TEXT NULL,
-    PRIMARY KEY (messageId)
+    PRIMARY KEY (messageId),
     KEY threadId (threadId)
 );
 
@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS tickets (
     status VARCHAR(20) NOT NULL DEFAULT 'open',
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY threadId (threadId)
+    PRIMARY KEY threadId (threadId),
     KEY status (status),
     KEY creatorId (creatorId)
 );
@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS posts (
     authorId VARCHAR(100) NOT NULL,
     tag VARCHAR(100) NULL,
     pinned TINYINT(1) NOT NULL DEFAULT 0,
-    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 );
 
@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS news (
     body LONGTEXT NOT NULL,
     authorId VARCHAR(100) NOT NULL,
     pinned TINYINT(1) NOT NULL DEFAULT 0,
-    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 );
 
@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS help (
     body LONGTEXT NOT NULL,
     authorId VARCHAR(100) NOT NULL,
     pinned TINYINT(1) NOT NULL DEFAULT 0,
-    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 );
 
@@ -244,7 +244,7 @@ CREATE TABLE IF NOT EXISTS network_servers (
     address VARCHAR(255) NOT NULL UNIQUE,
     status VARCHAR(255) NOT NULL,
     data LONGTEXT,
-    last_sync DATETIME NULL
+    last_sync DATETIME NULL,
     PRIMARY KEY (id)
 );
 
@@ -280,7 +280,7 @@ CREATE TABLE IF NOT EXISTS members (
     password TEXT DEFAULT NULL,
     publicKey TEXT DEFAULT '',
     isVerifiedKey BOOLEAN DEFAULT FALSE,
-    pow TEXT DEFAULT ''
+    pow TEXT DEFAULT '',
     PRIMARY KEY (rowId)
 );
 
