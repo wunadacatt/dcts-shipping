@@ -62,11 +62,17 @@ function truncateText(text, length) {
 function handleInviteCode(member, socket, response) {
     // handle user registration and invite only things.
     // if a member was on the server already he wont be prompted for codes.
+
     if (
         serverconfig.serverinfo.registration.enabled === false &&
         !serverconfig.servermembers[member?.id]
     ) {
         if (!member?.code) {
+            // to be extra sure, remove users from the pow verified array
+            // so that if they try to fetch data like member list etc
+            // it'll automatically be denied
+            removeFromArray(powVerifiedUsers, socket.id);
+
             response({
                 error: `Registration is disabled on this server.<br>
                         You need to provide an access code`,
@@ -74,10 +80,6 @@ function handleInviteCode(member, socket, response) {
                 registration: serverconfig.serverinfo.registration.enabled,
             });
 
-            // to be extra sure, remove users from the pow verified array
-            // so that if they try to fetch data like member list etc
-            // it'll automatically be denied
-            removeFromArray(powVerifiedUsers, socket.id);
             return false;
         }
         // code was correct, so lets process its properties
@@ -319,6 +321,9 @@ export default (io) => (socket) => {
                     Logger.debug("missing onboarding");
                     return;
                 }
+
+                // error if no password passed
+                if(!member?.password) return response({error: "Missing password field in plaintext"})
 
                 var userToken = generateId(48);
                 member.token = userToken;
