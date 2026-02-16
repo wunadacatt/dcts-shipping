@@ -165,23 +165,19 @@ class UserManager {
 
         return await this.getServerBadges(gid, beta).then(result => {
             if (result != null) {
-                var badges = JSON.parse(result);
+                let badgeData = JSON.parse(result?.data || "{}")
+                console.log(badgeData)
 
-                if (badges && Object.keys(badges).length > 0) {
-                    localStorage.setItem("serverBadges", JSON.stringify(badges));
-                } else if (!badges && localStorage.getItem("serverBadges")) {
-                    badges = localStorage.getItem("serverBadges");
-                }
-
-                Object.keys(badges).forEach(function (badge) {
+                for(let badgeKey of Object.keys(badgeData)){
+                    let badge = badgeData[badgeKey];
                     badgeElement.insertAdjacentHTML('beforeend',
                         `<img 
                                     class="profile_badge" 
-                                    src="https://raw.githubusercontent.com/hackthedev/dcts-shipping/${beta ? "beta" : "main"}/badges/${badges[badge].icon}.png" 
-                                    title="${badges[badge].display}" 
+                                    src="/img/badges/${badge.icon}.png" 
+                                    title="${badge.display}" 
                                 />`
                     );
-                });
+                }
             }
         });
     }
@@ -205,23 +201,18 @@ class UserManager {
 
         return await this.getUserBadges(gid, beta).then(result => {
             if (result != null) {
-                var badges = JSON.parse(result);
+                let badgeData = JSON.parse(result?.data || "{}")
 
-                if (badges && Object.keys(badges).length > 0) {
-                    localStorage.setItem("userBadges", JSON.stringify(badges));
-                } else if (!badges && localStorage.getItem("userBadges")) {
-                    badges = localStorage.getItem("userBadges");
-                }
-
-                Object.keys(badges).forEach(function (badge) {
+                for(let badgeKey of Object.keys(badgeData)){
+                    let badge = badgeData[badgeKey];
                     badgeElement.insertAdjacentHTML('beforeend',
                         `<img 
                                     class="profile_badge" 
-                                    src="https://raw.githubusercontent.com/hackthedev/dcts-shipping/${beta ? "beta" : "main"}/badges/${badges[badge].icon}.png" 
-                                    title="${badges[badge].display}" 
+                                    src="/img/badges/${badge.icon}.png" 
+                                    title="${badge.display}" 
                                 />`
                     );
-                });
+                }
 
                 return true;
             }

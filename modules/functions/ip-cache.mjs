@@ -22,6 +22,8 @@ export async function setCache(identifier, type, data) {
     if (!type) throw new Error("type not supplied.");
     if (!data) throw new Error("data not supplied.");
 
+    if(typeof data === "object") data = JSON.stringify(data)
+
     await db.queryDatabase(
         `
         INSERT INTO cache (identifier, type, data, created)

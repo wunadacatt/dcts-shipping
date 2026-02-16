@@ -4,6 +4,7 @@ console.log("%c" + "People can use the console to steal your account xo !", "col
 document.addEventListener("error", (e) => {
     const el = e.target;
     if (el.tagName === "IMG") {
+        el.setAttribute("data-src", el.src)
         el.src = "/img/error.png";
     }
 }, true);
