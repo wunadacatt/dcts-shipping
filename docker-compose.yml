@@ -1,6 +1,6 @@
 services:
   dcts-app:
-    image: ghcr.io/wunadacatt/dcts-shipping:beta
+    build: ./
     depends_on:
       dcts-mariadb:
         condition: service_healthy
