@@ -598,7 +598,7 @@ export function checkBool(value, type) {
     }
 }
 
-export function checkConfigAdditions(lk_key, lk_secret, lk_url) {
+export function checkConfigAdditions() {
     // recreating the config example minimum base so that copying isnt needed anymore
     checkObjectKeys(serverconfig, "serverinfo.name", "Default Server")
     checkObjectKeys(serverconfig, "serverinfo.description", "")
@@ -766,9 +766,9 @@ export function checkConfigAdditions(lk_key, lk_secret, lk_url) {
 
     // livekit VC
     checkObjectKeys(serverconfig, "serverinfo.livekit.enabled", true)
-    checkObjectKeys(serverconfig, "serverinfo.livekit.key", lk_key)
-    checkObjectKeys(serverconfig, "serverinfo.livekit.secret", lk_secret)
-    checkObjectKeys(serverconfig, "serverinfo.livekit.url", lk_url)
+    checkObjectKeys(serverconfig, "serverinfo.livekit.key", "dev")
+    checkObjectKeys(serverconfig, "serverinfo.livekit.secret", "testing")
+    checkObjectKeys(serverconfig, "serverinfo.livekit.url", "localhost:7880")
 
     // server list / discovery
     checkObjectKeys(serverconfig, "serverinfo.discovery.enabled", true)
