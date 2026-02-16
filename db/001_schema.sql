@@ -230,7 +230,7 @@ CREATE TABLE IF NOT EXISTS content_reads (
     userId VARCHAR(128) NOT NULL,
     readAt DATETIME NULL,
     createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
     UNIQUE KEY uq_content_user (contentType, contentId, userId),
     INDEX idx_user_unread (userId, readAt),
     INDEX idx_content (contentType, contentId)
