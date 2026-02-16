@@ -93,6 +93,9 @@ export const auther = new dSyncAuth(app, signer, async function (data) {
     }
 });
 
+export let ipsec;
+export let io;
+
 // config file saving
 let fileHandle = null; // File handle for the config file
 let savedState = null; // In-memory config state
@@ -184,17 +187,6 @@ export let db = new dSyncSql({
     connectionLimit: serverconfig.serverinfo.sql.connectionLimit,
     queueLimit: 0,
 });
-
-Logger.info("Checking and waiting for database connection...");
-Logger.info("If it takes too long check the data inside the config.json file");
-Logger.info("and make sure the database is running and accessible.");
-await db.waitForConnection();
-Logger.success("Connection established!");
-Logger.space();
-
-// backup members from config file
-await checkMemberMigration();
-
 // Import functions etc from files (= better organisation)
 // Special thanks to Kannustin <3
 
@@ -815,6 +807,18 @@ if (checkVer != null) {
 
 // Check if SSL is used or not
 server = http.createServer(app)
+io = new Server(server, {
+    maxHttpBufferSize: 1e8,
+    secure: true,
+    pingInterval: 25000,
+    pingTimeout: 60000,
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"],
+        credentials: false,
+    },
+});
+
 
 // Catch uncaught errors
 process.on("uncaughtException", function (err) {
@@ -863,45 +867,18 @@ app.use(
     })
 );
 
-export let ipsec = new dSyncIPSec({
-    checkCache: async (ip) => {
-        let ipInfoRow = await getCache(ip, "ip_cache");
-        if(ipInfoRow?.length === 0){
-            await setCache(ip, "ip_cache");
-        }
-    },
-    setCache: async (ip, data) => {
-        await setCache(ip, "ip_cache", JSON.stringify(data));
-    }
-});
-ipsec.updateRule({
-    blockBogon: serverconfig.serverinfo.moderation.ip.blockBogon,
-    blockSatelite: serverconfig.serverinfo.moderation.ip.blockSatelite,
-    blockCrawler: serverconfig.serverinfo.moderation.ip.blockCrawler,
-    blockProxy: serverconfig.serverinfo.moderation.ip.blockProxy,
-    blockVPN: serverconfig.serverinfo.moderation.ip.blockVPN,
-    blockTor: serverconfig.serverinfo.moderation.ip.blockTor,
-    blockAbuser: serverconfig.serverinfo.moderation.ip.blockAbuser,
-
-    whitelistedUrls: serverconfig.serverinfo.moderation.ip.urlWhitelist,
-    whitelistedIps: serverconfig.serverinfo.moderation.ip.whitelist,
-    blacklistedIps: serverconfig.serverinfo.moderation.ip.blacklist,
-    companyDomainWhitelist: serverconfig.serverinfo.moderation.ip.companyDomainWhitelist,
-});
-
-export const io = new Server(server, {
-    maxHttpBufferSize: 1e8,
-    secure: true,
-    pingInterval: 25000,
-    pingTimeout: 60000,
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"],
-        credentials: false,
-    },
-});
-
 (async () => {
+
+    Logger.info("Checking and waiting for database connection...");
+    Logger.info("If it takes too long check the data inside the config.json file");
+    Logger.info("and make sure the database is running and accessible.");
+    await db.waitForConnection();
+    Logger.success("Connection established!");
+    Logger.space();
+
+    // backup members from config file
+    await checkMemberMigration();
+
     for (const table of tables) {
         await db.checkAndCreateTable(table);
     }
@@ -912,7 +889,6 @@ export const io = new Server(server, {
     scheduleDbTasks(dbTasks);
 
     await checkMigrations();
-    await ipsec.filterExpressTraffic(app)
 
     let libDir = path.join(path.resolve(), "public", "js", "libs");
     const results = await FrontendLibs.installMultiple([
@@ -934,8 +910,39 @@ export const io = new Server(server, {
     listenToIO();
 })();
 
+async function initIPSec(){
+    ipsec = new dSyncIPSec({
+        checkCache: async (ip) => {
+            let ipInfoRow = await getCache(ip, "ip_cache");
+            if(ipInfoRow?.length === 0){
+                await setCache(ip, "ip_cache");
+            }
+        },
+        setCache: async (ip, data) => {
+            await setCache(ip, "ip_cache", JSON.stringify(data));
+        }
+    });
+    ipsec.updateRule({
+        blockBogon: serverconfig.serverinfo.moderation.ip.blockBogon,
+        blockSatelite: serverconfig.serverinfo.moderation.ip.blockSatelite,
+        blockCrawler: serverconfig.serverinfo.moderation.ip.blockCrawler,
+        blockProxy: serverconfig.serverinfo.moderation.ip.blockProxy,
+        blockVPN: serverconfig.serverinfo.moderation.ip.blockVPN,
+        blockTor: serverconfig.serverinfo.moderation.ip.blockTor,
+        blockAbuser: serverconfig.serverinfo.moderation.ip.blockAbuser,
 
-export function startServer() {
+        whitelistedUrls: serverconfig.serverinfo.moderation.ip.urlWhitelist,
+        whitelistedIps: serverconfig.serverinfo.moderation.ip.whitelist,
+        blacklistedIps: serverconfig.serverinfo.moderation.ip.blacklist,
+        companyDomainWhitelist: serverconfig.serverinfo.moderation.ip.companyDomainWhitelist,
+    });
+
+    await ipsec.filterExpressTraffic(app)
+}
+
+export async function startServer() {
+    initIPSec();
+
     // Start the app server
     var port = process.env.PORT || serverconfig.serverinfo.port;
     server.listen(port, function () {

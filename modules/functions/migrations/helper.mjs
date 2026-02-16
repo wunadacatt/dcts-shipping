@@ -51,16 +51,6 @@ export async function checkMigrations(){
         await completeMigrationTask("clearMemberBase64FromDb")
     }
 
-    migrationTask = await getMigrationTask("rebuildMessageLogs", true);
-    if(migrationTask && migrationTask?.done === 0){
-        await doBackup()
-        await queryDatabase("DROP TABLE message_logs")
-        await completeMigrationTask("rebuildMessageLogs")
-        Logger.space()
-        Logger.warn("Message logs have been rebuilt. Please start the server one more time")
-        Logger.space();
-    }
-
     // inox id error
     migrationTask = await getMigrationTask("fixAutoIncrementInMessageLogs", true);
     if(migrationTask && migrationTask?.done === 0){

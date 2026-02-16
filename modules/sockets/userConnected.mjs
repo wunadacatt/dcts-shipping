@@ -64,8 +64,8 @@ function handleInviteCode(member, socket, response) {
     // if a member was on the server already he wont be prompted for codes.
 
     if (
-        serverconfig.serverinfo.registration.enabled === false &&
-        !serverconfig.servermembers[member?.id]
+        serverconfig.serverinfo.registration.enabled === false
+        && serverconfig.servermembers[member?.id]?.onboarding === false
     ) {
         if (!member?.code) {
             // to be extra sure, remove users from the pow verified array
@@ -82,6 +82,7 @@ function handleInviteCode(member, socket, response) {
 
             return false;
         }
+
         // code was correct, so lets process its properties
         if (serverconfig.serverinfo.registration.accessCodes[member.code]) {
             let code = serverconfig.serverinfo.registration.accessCodes[member.code];
@@ -303,10 +304,10 @@ export default (io) => (socket) => {
                 !serverconfig.servermembers[member.id] ||
                 serverconfig.servermembers[member.id]?.onboarding === false
             ) {
+                if(!member?.name) member.name = "Arnold"
+
                 // New Member joined the server
                 Logger.debug("New member connected");
-                Logger.debug(!serverconfig.servermembers[member.id]);
-                Logger.debug(serverconfig.servermembers[member.id]?.onboarding);
 
                 // handle onboarding
                 if (member?.onboarding === false) {
@@ -383,26 +384,24 @@ export default (io) => (socket) => {
                 try {
                     sendMessageToUser(
                         socket.id,
-                        JSON.parse(
-                            `{
-                            "title": "Welcome ${serverconfig.servermembers[member.id].name} <3",
-                            "message": "",
-                            "buttons": {
-                                "0": {
-                                    "text": "Saved!",
-                                    "events": "refreshValues()"
+                        {
+                            title: `Welcome ${serverconfig.servermembers[member.id].name} <3`,
+                            message: "",
+                            buttons: {
+                                0: {
+                                    text: "Saved!",
+                                    events: "refreshValues()"
                                 }
                             },
-                            "action": "register",
-                            "token": "${serverconfig.servermembers[member.id].token}",
-                            "icon": "${serverconfig.servermembers[member.id].icon}",
-                            "banner": "${serverconfig.servermembers[member.id].banner}",
-                            "status": "${serverconfig.servermembers[member.id].status || ""}",
-                            "aboutme": "${serverconfig.servermembers[member.id].aboutme || ""}",
-                            "loginName": "${serverconfig.servermembers[member.id].loginName}",
-                            "type": "success"
-                        }`,
-                        ),
+                            action: "register",
+                            token: serverconfig.servermembers[member.id].token,
+                            icon: serverconfig.servermembers[member.id].icon,
+                            banner: serverconfig.servermembers[member.id].banner,
+                            status: serverconfig.servermembers[member.id].status || "",
+                            aboutme: serverconfig.servermembers[member.id].aboutme || "",
+                            loginName: serverconfig.servermembers[member.id].loginName,
+                            type: "success"
+                        }
                     );
 
                     // if a new member joins lets send a system welcome DM.

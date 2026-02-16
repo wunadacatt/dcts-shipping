@@ -107,11 +107,11 @@ function displayServerInfoSettings(response){
 
     mainSettings.insertAdjacentElement("beforeend",
         JsonEditor.getSettingElement(
-            response.serverinfo.registration.enabled,
+            !response.serverinfo.registration.enabled,
             "Invite Only",
             "If new members need an invite code to be able to register a new account.",
             v => {
-                response.serverinfo.registration.enabled = v;
+                response.serverinfo.registration.enabled = !v;
                 if (checkJsonChanges(response, originalnfo)) {
                     showSaveSettings(async () => {
                         saveServerInfoSettings(response);
@@ -243,6 +243,9 @@ async function saveServerInfoSettings(jsonData){
                 type: "error",
                 icon: "error"
             })
+        }
+        else{
+            originalnfo = jsonData;
         }
     });
 }
