@@ -905,16 +905,22 @@ const criticalTables = ["members", "messages", "cache", "migrations", "message_l
 
 async function waitForTable(table, interval = 1000) {
     while (true) {
-        try {
-            await queryDatabase(`SELECT 1 FROM ?? LIMIT 1`, [table]);
+        const result = await queryDatabase(
+            `SELECT TABLE_NAME FROM information_schema.tables 
+             WHERE table_schema = DATABASE() AND table_name = ?`,
+            [table]
+        );
+
+        if (result.length) {
             console.log(`${table} exists`);
-            return; // exit the loop once the table exists
-        } catch (err) {
-            console.log(`${table} does not exist yet, retrying...`);
-            await new Promise(resolve => setTimeout(resolve, interval)); // wait before retry
+            return;
         }
+
+        console.log(`${table} does not exist yet, retrying...`);
+        await new Promise(resolve => setTimeout(resolve, interval));
     }
 }
+
 
 (async () => {
     await db.waitForConnection();
@@ -922,7 +928,7 @@ async function waitForTable(table, interval = 1000) {
     for (const t of criticalTables) {
         await waitForTable(t);
     }
-    
+
     await checkMigrations();
     await loadMembersFromDB();
 
