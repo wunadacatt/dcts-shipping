@@ -67,7 +67,7 @@ function setPreview() {
 
     settings_username.value = `${limitString(UserManager.getUsername(), 30)}`;
     settings_status.value = `${limitString(UserManager.getStatus(), 100)}`;
-    settings_aboutme.value = `${limitString(UserManager.getAboutme(), 500)}`;
+    settings_aboutme.value = `${limitString(unescapeHtmlEntities(UserManager.getAboutme()), 500)}`;
 
     settings_icon.value = `${UserManager.getPFP()}`;
     settings_banner.value = `${UserManager.getBanner()}`;

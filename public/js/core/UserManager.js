@@ -19,6 +19,23 @@ class UserManager {
 
     }
 
+    static async resolveMemberGid(memberId){
+        if(!memberId || memberId?.length !== 12) throw new Error("Member ID not set or length invalid!");
+
+        let member = await ChatManager.resolveMember(memberId);
+        if(!member){
+            console.warn("Member not found for Gid resolving");
+            return null
+        }
+
+        if(!member?.publicKey){
+            console.warn("Member has no public key!");
+            return null;
+        }
+
+        return await Crypto.GenerateGid(member.publicKey);
+    }
+
     static async getMemberProfileHTML(memberObj) {
 
         let roleCode = "";
@@ -55,40 +72,18 @@ class UserManager {
             <div id="profile_banner" draggable="false" style="background-image: url('${ChatManager.proxyUrl(memberObj?.banner)}')"></div>
         
             <div id="profile_pfp_container">
-                <div id="profile_icon" draggable="false" style="background-image: url('${ChatManager.proxyUrl(memberObj?.icon)}');"></div>
-                <div class="profile_meta">
-                    <div class="info">
-                        <h1>Joined</h1>
-                        <div class="value">
-                            ${new Date(memberObj?.joined).toLocaleString("narrow", {
-                                dateStyle: "short",
-                                timeStyle: "short",
-                                hour12: true
-                            }).replace(",", "<br>")}
-                            </div>
-                        </div>
-                                                
-                        <div class="info">
-                            <h1>Last online</h1>
-                            <div class="value">
-                                ${new Date(memberObj?.lastOnline).toLocaleString("narrow", {
-                                    dateStyle: "short",
-                                    timeStyle: "short",
-                                    hour12: true
-                                }).replace(",", "<br>")}
-                        </div>
-                    </div>                 
-                </div>
+                <div id="profile_icon" draggable="false" style="background-image: url('${ChatManager.proxyUrl(memberObj?.icon)}');"></div>                
+                <div id="profile_badge_container" data-gid="${isLauncher() ? await Crypto.GenerateGid(memberObj?.publicKey) : ""}"></div>                
             </div>
             
         
             <div id="profile_content">       
-                <div id="profile_username"><h2 style="margin-bottom: 0 !important;">${memberObj?.name}</h2></div>                
-                <div id="profile_status">${ChatManager.countryCodeToEmoji(memberObj?.country_code)} <i>${memberObj?.status ? memberObj?.status : ""}</i></div>                
-                <div id="profile_badge_container" data-gid="${isLauncher() ? await Crypto.GenerateGid(memberObj?.publicKey) : ""}"></div> 
-                
+                <div id="profile_username"><h2 style="margin: 0 !important;">${memberObj?.name}</h2></div>                
+                <div id="profile_status">${ChatManager.countryCodeToEmoji(memberObj?.country_code)} <i>${memberObj?.status ? memberObj?.status : ""}</i></div>  
+                                
+                <hr>
                 <div class="profile_aboutme">       
-                    ${memberObj?.aboutme?.trim()?.length > 0 ? `<hr><h2 class="profile_headline">About Me</h2>${sanitizeHtmlForRender(memberObj.aboutme)}` : ""}
+                    ${memberObj?.aboutme?.trim()?.length > 0 ? `<h2 class="profile_headline">About Me</h2>${sanitizeHtmlForRender(memberObj.aboutme)}` : ""}
                     
                     
                     <div class="profile_meta_container">
@@ -102,10 +97,35 @@ class UserManager {
                     </div>        
                 </div>
             <hr>
-            
+                       
             <a id="dm_action" href="/home.html?dm=${memberObj?.id}">&#10149; Send Message</a>
 
-           
+            <div class="profile_meta">
+                <div class="info">
+                    <h1>Joined</h1>
+                    <div class="value">
+                        ${new Date(memberObj?.joined).toLocaleString("narrow", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                            hour12: true
+                        }).replace(",", "<br>")}
+                        </div>
+                    </div>
+                                            
+                    <div class="info">
+                        <h1>Last online</h1>
+                        <div class="value">
+                            ${new Date(memberObj?.lastOnline).toLocaleString("narrow", {
+                                dateStyle: "short",
+                                timeStyle: "short",
+                                hour12: true
+                            }).replace(",", "<br>")}
+                    </div>
+                </div>                 
+            </div>
+            
+            <hr>
+            
             <div id="profile_roles">
                 <h2 class="profile_headline">Roles</h2>
                 ${roleCode}

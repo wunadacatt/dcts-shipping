@@ -130,11 +130,11 @@ async function setupAccount(challenge, difficulty) {
 
                     if (!powChallenge || !powSolution) {
                         showSystemMessage({
-                            title: "Import Error",
-                            text: "It seems like the imported data is missing identity data",
+                            title: "Import Warning",
+                            text: "Some data was missing and may not be complete!",
                             icon: "error",
                             img: null,
-                            type: "error",
+                            type: "warning",
                             duration: 10000
                         });
                         return;
