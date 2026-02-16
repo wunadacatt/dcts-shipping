@@ -917,15 +917,13 @@ async function userJoined(onboardingFlag = false, passwordFlag = null, loginName
         }, function (response) {
 
             // sync data
-            if (!response?.error && response.finishedOnboarding === true) {
-                if (response?.token) CookieManager.setCookie("token", response.token);
-                if (response?.icon) CookieManager.setCookie("pfp", response.icon);
-                if (response?.banner) CookieManager.setCookie("banner", response.banner);
-                if (response?.aboutme) CookieManager.setCookie("banner", response.aboutme);
-                if (response?.status) CookieManager.setCookie("banner", response.status);
-                if (response?.loginName) CookieManager.setCookie("banner", response.loginName);
-                if (response?.id) CookieManager.setCookie("banner", response.id);
-            }
+            if (response?.token) CookieManager.setCookie("token", response.token);
+            if (response?.icon) CookieManager.setCookie("pfp", response.icon);
+            if (response?.banner) CookieManager.setCookie("banner", response.banner);
+            if (response?.aboutme) CookieManager.setCookie("banner", response.aboutme);
+            if (response?.status) CookieManager.setCookie("banner", response.status);
+            if (response?.loginName) CookieManager.setCookie("banner", response.loginName);
+            if (response?.id) CookieManager.setCookie("banner", response.id);
 
             // if we finished onboarding
             if (!response?.error && response.finishedOnboarding === true && initial) {
