@@ -3,6 +3,7 @@ import {XMLHttpRequest, fetch, serverconfig} from "../../../index.mjs";
 import Logger from "@hackthedev/terminal-logger"
 import fs from "fs";
 import {spawn} from "child_process";
+import { formatDateTimeForMySQL } from "../chat/main.mjs";
 
 
 export async function exportDatabaseFromPool(pool, outFile) {
