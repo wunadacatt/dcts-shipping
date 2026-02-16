@@ -70,6 +70,7 @@ services:
       - 443:443
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./Private_Certs:/etc/caddy/certs:ro # Mount the certs directory as read-only
       - caddy_data:/data
       - caddy_config:/config
     depends_on:

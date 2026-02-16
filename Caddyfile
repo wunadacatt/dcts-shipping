@@ -1,4 +1,5 @@
 lk.wunadacat.com {
+    tls /etc/caddy/certs/certificate.pem /etc/caddy/certs/private.pem
 
     encode gzip zstd
 
@@ -18,6 +19,7 @@ lk.wunadacat.com {
 }
 
 chat.wunadacat.com {
+    tls /etc/caddy/certs/certificate.pem /etc/caddy/certs/private.pem
 
     encode gzip zstd
 
