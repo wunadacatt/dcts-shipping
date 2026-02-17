@@ -337,7 +337,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     ContextMenu.registerClickEvent(
         "inbox reply",
         [
-            ".headerIcon.inbox .inbox-container .inbox-content .entry"
+            ".headerIcon.inbox .inbox-container .inbox-content .entry .content"
         ],
         async (data) => {
 
