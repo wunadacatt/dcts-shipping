@@ -3,7 +3,7 @@ import {backupSystem} from "../main.mjs";
 import {migrateOldMessagesToNewMessageSystemWithoutEncoding} from "./messageMigration.mjs";
 import {clearMemberBase64FromDb} from "./base64_fixer.mjs";
 import Logger from "@hackthedev/terminal-logger"
-import {versionCode} from "../../../index.mjs";
+import {saveConfig, serverconfig, versionCode} from "../../../index.mjs";
 
 export async function createMigrationTask(name){
     return await queryDatabase("INSERT IGNORE INTO migrations (migration_name) VALUES (?)", [name])
@@ -60,6 +60,32 @@ export async function checkMigrations(){
             []
         );
         await completeMigrationTask("fixAutoIncrementInMessageLogs")
+    }
+
+    // fix 1erb45 ids to 123254345
+    migrationTask = await getMigrationTask("fixPRIds", true);
+    if(migrationTask && migrationTask?.done === 0){
+        await doBackup()
+
+        for (const [groupKey, group] of Object.entries(serverconfig.groups)) {
+            group.info.id = String(groupKey);
+
+            const categories = group.channels?.categories;
+            if (!categories) continue;
+
+            for (const [catKey, cat] of Object.entries(categories)) {
+                cat.info.id = String(catKey);
+
+                if (!cat.channel) continue;
+
+                for (const [chKey, ch] of Object.entries(cat.channel)) {
+                    ch.id = String(chKey);
+                }
+            }
+        }
+
+        await saveConfig(serverconfig);
+        await completeMigrationTask("fixPRIds")
     }
 
     async function doBackup(){

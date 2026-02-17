@@ -52,7 +52,7 @@ export default (io) => (socket) => {
                             let originalPath = findInJson(
                                 serverconfig.groups[member.group].channels.categories,
                                 "id",
-                                parseInt(channelId),
+                                channelId,
                                 true
                             );
     
