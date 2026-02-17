@@ -106,7 +106,7 @@ class Inbox {
                         </p>
                     </div>
                     <div class="actions">
-                        <button onclick="Inbox.markAsRead('${item?.inboxId}')">&#10004;</button>
+                        <button onclick="Inbox.markAsRead('${item?.inboxId}');PageRenderer.remove();">&#10004;</button>
                     </div>
                 </div>
             `

@@ -193,7 +193,9 @@ export async function addInboxMessage(memberId, data = {}, type = "general", cus
 
     if (customId) {
         query = `INSERT
-        INTO inbox (memberId, type, data, createdAt, customId) VALUES (?, ?, ?, ?, ?)`;
+        INTO inbox (memberId, type, data, createdAt, customId) VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE data=VALUES(data)`;
+
         return await queryDatabase(query, [memberId, type, JSON.stringify(data), new Date().getTime(), customId]);
     }
 
