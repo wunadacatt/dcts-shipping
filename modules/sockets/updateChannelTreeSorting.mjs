@@ -2,6 +2,7 @@ import { saveConfig, serverconfig, xssFilters } from "../../index.mjs";
 import { findInJson, hasPermission } from "../functions/chat/main.mjs";
 import { saveChatMessage } from "../functions/io.mjs";
 import { copyObject, validateMemberId } from "../functions/main.mjs";
+import Logger from "@hackthedev/terminal-logger";
 
 export default (io) => (socket) => {
     // socket.on code here
