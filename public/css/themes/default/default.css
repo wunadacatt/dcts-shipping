@@ -33,6 +33,12 @@ a {
     color: hsl(from var(--main) h s calc(l * 12));
     font-style: italic;
 }
+.message-container .content{
+    font-size: 14.5px;
+}
+.message-container .meta .username{
+    font-size: 17.5px;
+}
 .message-container .content:hover{
     background-color: hsl(from var(--main) h s calc(l * 2.25))
 }
@@ -198,7 +204,7 @@ p.note{
 }
 
 .message-container .content.highlight{
-    background-color: hsl(from var(--main) h s calc(l * 3))
+    background-color: hsl(from var(--main) h s calc(l * 3));
 }
 
 /* inbox */

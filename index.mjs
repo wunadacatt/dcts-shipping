@@ -903,11 +903,9 @@ async function waitForTable(table, interval = 1000) {
         await waitForTable(t);
     }
 
-    // backup members from config file
-    await checkMemberMigration();
-
-    await checkMigrations();
     await loadMembersFromDB();
+    await checkMigrations();
+
 
     // after the tables exist etc we will fire up our awesome new job(s)
     scheduleDbTasks(dbTasks);

@@ -7,7 +7,8 @@ app.get("/docs/list", async (req, res) => {
         .readdirSync("docs", { recursive: true })
         .filter(file => file.endsWith(".md"))
         .map(file => {
-            const fullPath = file.startsWith("docs/") ? file : `docs/${file}`;
+            let cleanedFile = file.replaceAll("\\", "/");
+            const fullPath = cleanedFile.startsWith("docs/") ? cleanedFile : `docs/${cleanedFile}`;
             const stat = fs.statSync(fullPath);
 
             return {

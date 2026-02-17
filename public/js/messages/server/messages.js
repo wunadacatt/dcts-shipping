@@ -278,6 +278,8 @@ function registerMessageCreateEvent(){
     
     socket.on('messageCreate', async function (message) {
         let container = document.getElementById("content");
+
+        requestAnimationFrame();
         const isScrolledDown = isScrolledToBottom(container);
 
         // lets increase the channel count first
@@ -310,7 +312,11 @@ function registerMessageCreateEvent(){
             });
         }
 
-        if(isScrolledDown) waitFor(scrollDown, 10)
+
+        if(isScrolledDown) {
+            requestAnimationFrame();
+            scrollDown("messageCreated");
+        }
 
         await Inbox.markAsRead(`${UserManager.getID()}-${message.messageId}`)
         setTimeout(() => {
