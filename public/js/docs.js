@@ -469,16 +469,22 @@ class Docs {
             }
 
             .docs-container .docs-close{
-                background-color: hsl(from var(--main) h s calc(l * 3.5));
+                display: flex;
+                justify-content: center;
+                align-items: center;
                 flex-direction: column;
                 align-self: start;
+                
+                background-color: hsl(from var(--main) h s calc(l * 3.5));
+                
+                
+                width: 40px;
+                height: 40px;
 
                 padding: 12px;
                 font-weight: bold;
                 font-size: 24px;
-                text-align: center;
 
-                line-height: .65;
 
                 border-radius: 50%;
                 cursor: pointer;
