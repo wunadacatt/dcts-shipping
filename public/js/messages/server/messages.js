@@ -279,8 +279,10 @@ function registerMessageCreateEvent(){
     socket.on('messageCreate', async function (message) {
         let container = document.getElementById("content");
 
-        requestAnimationFrame();
-        const isScrolledDown = isScrolledToBottom(container);
+        let isScrolledDown;
+        requestAnimationFrame(() => {
+            isScrolledDown = isScrolledToBottom(container);
+        });
 
         // lets increase the channel count first
         ChatManager.increaseChannelMarkerCount(message.channel)
@@ -314,8 +316,9 @@ function registerMessageCreateEvent(){
 
 
         if(isScrolledDown) {
-            requestAnimationFrame();
-            scrollDown("messageCreated");
+            requestAnimationFrame(() => {
+                scrollDown("messageCreated");
+            });
         }
 
         await Inbox.markAsRead(`${UserManager.getID()}-${message.messageId}`)
