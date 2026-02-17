@@ -94,6 +94,9 @@ export const auther = new dSyncAuth(app, signer, async function (data) {
     }
 });
 
+export let ipsec;
+export let io;
+
 // config file saving
 let fileHandle = null; // File handle for the config file
 let savedState = null; // In-memory config state
@@ -805,7 +808,7 @@ if (checkVer != null) {
 
 // Check if SSL is used or not
 server = http.createServer(app)
-export const io = new Server(server, {
+io = new Server(server, {
     maxHttpBufferSize: 1e8,
     secure: true,
     pingInterval: 25000,
@@ -864,33 +867,6 @@ app.use(
         maxAge: 0,
     })
 );
-
-export let ipsec = new dSyncIPSec({
-    checkCache: async (ip) => {
-        let ipInfoRow = await getCache(ip, "ip_cache");
-        if(ipInfoRow?.length === 0){
-            await setCache(ip, "ip_cache");
-        }
-    },
-    setCache: async (ip, data) => {
-        await setCache(ip, "ip_cache", JSON.stringify(data));
-    }
-});
-ipsec.updateRule({
-    blockBogon: serverconfig.serverinfo.moderation.ip.blockBogon,
-    blockSatelite: serverconfig.serverinfo.moderation.ip.blockSatelite,
-    blockCrawler: serverconfig.serverinfo.moderation.ip.blockCrawler,
-    blockProxy: serverconfig.serverinfo.moderation.ip.blockProxy,
-    blockVPN: serverconfig.serverinfo.moderation.ip.blockVPN,
-    blockTor: serverconfig.serverinfo.moderation.ip.blockTor,
-    blockAbuser: serverconfig.serverinfo.moderation.ip.blockAbuser,
-
-    whitelistedUrls: serverconfig.serverinfo.moderation.ip.urlWhitelist,
-    whitelistedIps: serverconfig.serverinfo.moderation.ip.whitelist,
-    blacklistedIps: serverconfig.serverinfo.moderation.ip.blacklist,
-    companyDomainWhitelist: serverconfig.serverinfo.moderation.ip.companyDomainWhitelist,
-});
-
 const criticalTables = ["members", "messages", "cache", "migrations", "message_logs", "reports"];
 
 async function waitForTable(table, interval = 1000) {
