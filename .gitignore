@@ -16,9 +16,5 @@ privatekey.json
 
 .idea
 .package-lock.json
-dcts/configs/config.json
-dcts/configs/payments.json
-dcts/plugins/settings.json
-Private_Certs/certificate.pem
-Private_Certs/private.pem
-dcts/configs/emojis.json
+dcts/
+Private_Certs/
