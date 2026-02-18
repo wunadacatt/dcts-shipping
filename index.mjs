@@ -587,7 +587,7 @@ const tables = [
     {
         name: "posts",
         columns: [
-            {name: "id", type: "int(11) NOT NULL"},
+            {name: "id", type: "int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT"},
             {name: "title", type: "text NOT NULL"},
             {name: "body", type: "longtext NOT NULL"},
             {name: "authorId", type: "varchar(100) NOT NULL"},
@@ -597,9 +597,7 @@ const tables = [
                 name: "createdAt",
                 type: "datetime NOT NULL DEFAULT CURRENT_TIMESTAMP",
             },
-        ],
-        keys: [{name: "PRIMARY KEY", type: "(id)"}],
-        autoIncrement: "id int(11) NOT NULL AUTO_INCREMENT",
+        ]
     },
     {
         name: "news",
