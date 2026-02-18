@@ -2329,29 +2329,94 @@ function getRoles() {
     });
 }
 
-function isScrolledToBottom(element) {
-    return Math.abs(element.scrollHeight - element.scrollTop - element.clientHeight) < 1;
+function isScrolledToBottom(element, tolerancePx = 2) {
+    const maxTop = Math.max(0, element.scrollHeight - element.clientHeight);
+    return (maxTop - element.scrollTop) <= tolerancePx;
 }
 
+function scrollDown(functionCaller, opts = {}) {
+    const el = document.getElementById("content");
+    if (!el) return;
 
-function scrollDown(functionCaller) {
-    const contentDiv = document.getElementById("content");
-    if (!contentDiv) return;
+    const tolerancePx = Number.isFinite(opts.tolerancePx) ? opts.tolerancePx : 2;
+    const maxMs = Number.isFinite(opts.maxMs) ? opts.maxMs : 5000;
+    const stableMs = Number.isFinite(opts.stableMs) ? opts.stableMs : 250;
 
-    const scroll = () => contentDiv.scrollTop = contentDiv.scrollHeight;
-    scroll();
+    if (!el._scrollDownState) el._scrollDownState = {};
+    const state = el._scrollDownState;
 
-    let tries = 0;
-    const interval = setInterval(() => {
-        requestAnimationFrame(() => {
-            scroll();
-        })
-        tries++;
-        if (tries > 3) clearInterval(interval);
-    }, 200);
+    state.seq = (state.seq || 0) + 1;
+    const seq = state.seq;
+
+    if (state.raf) cancelAnimationFrame(state.raf);
+    if (state.mo) state.mo.disconnect();
+    if (state.ro) state.ro.disconnect();
+
+    const start = performance.now();
+    let lastChange = performance.now();
+
+    const jumpBottom = () => {
+        const top = Math.max(0, el.scrollHeight - el.clientHeight);
+        if (el.scrollTop !== top) el.scrollTop = top;
+    };
+
+    const onAnyChange = () => { lastChange = performance.now(); };
+
+    state.mo = new MutationObserver(onAnyChange);
+    state.mo.observe(el, { childList: true, subtree: true, characterData: true, attributes: true });
+
+    state.ro = new ResizeObserver(onAnyChange);
+    state.ro.observe(el);
+
+    const bindMedia = () => {
+        const nodes = el.querySelectorAll("img,video");
+        nodes.forEach(n => {
+            if (n._sdBound) return;
+            n._sdBound = true;
+
+            if (n.tagName === "IMG") {
+                if (!n.complete) {
+                    n.addEventListener("load", onAnyChange, { once: true });
+                    n.addEventListener("error", onAnyChange, { once: true });
+                }
+            } else {
+                if (n.readyState < 2) {
+                    n.addEventListener("loadeddata", onAnyChange, { once: true });
+                    n.addEventListener("loadedmetadata", onAnyChange, { once: true });
+                    n.addEventListener("error", onAnyChange, { once: true });
+                }
+            }
+        });
+    };
+
+    const tick = () => {
+        if (el._scrollDownState.seq !== seq) return;
+
+        bindMedia();
+        jumpBottom();
+
+        const now = performance.now();
+        const bottomOk = isScrolledToBottom(el, tolerancePx);
+        const stableEnough = bottomOk && (now - lastChange) >= stableMs;
+
+        if (stableEnough || (now - start) >= maxMs) {
+            if (state.mo) state.mo.disconnect();
+            if (state.ro) state.ro.disconnect();
+            state.mo = null;
+            state.ro = null;
+            state.raf = null;
+            return;
+        }
+
+        state.raf = requestAnimationFrame(tick);
+    };
+
+    lastChange = performance.now();
+    tick();
 
     if (functionCaller) console.log(`ScrollDown called by ${functionCaller}`);
 }
+
 
 
 function sleep(ms) {
