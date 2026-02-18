@@ -951,7 +951,7 @@ class UserManager {
     }
 
 
-    static doAccountOnboarding(defaultValues = null) {
+    static doAccountOnboarding(defaultValues = null, code = null) {
         customPrompts.showPrompt(
             "Register Account",
             `
@@ -1081,7 +1081,7 @@ class UserManager {
 
 
                 // resubmit userjoin but with onboarding done
-                await userJoined(true, values.password, values.loginName)
+                await userJoined(true, values.password, values.loginName, code)
             },
             null,
             null,

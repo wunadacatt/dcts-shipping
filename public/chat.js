@@ -1023,7 +1023,10 @@ async function userJoined(onboardingFlag = false, passwordFlag = null, loginName
                                 let inviteCode = values?.inviteCode;
 
                                 if (inviteCode && inviteCode.length > 0) {
-                                    userJoined(false, null, null, inviteCode);
+                                    requestAnimationFrame(function () {
+                                        UserManager.doAccountOnboarding(null, inviteCode)
+                                    })
+                                    //userJoined(false, null, null, inviteCode);
                                 }
 
                                 if (!inviteCode) {

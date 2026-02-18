@@ -379,7 +379,7 @@ export default (io) => (socket) => {
 
                 serverconfig.servermembers[member.id].onboarding = true;
 
-                await saveMemberToDB(member?.id, serverconfig.servermembers[member.id]);
+                saveMemberToDB(member?.id, serverconfig.servermembers[member.id]);
 
                 try {
                     sendMessageToUser(

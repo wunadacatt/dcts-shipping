@@ -12,8 +12,12 @@
 }
 
 
+table#inviteCodes tr td.actions *{
+    user-select: none;
+}
 table#inviteCodes tr td{
     padding: 10px 40px;
+    user-select: all;
 }
 
 table#inviteCodes thead td{

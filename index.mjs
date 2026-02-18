@@ -1003,10 +1003,10 @@ export async function startServer() {
     });
 }
 
-const livekitPath = process.env.LIVEKIT_YAML_PATH || "./livekit.yaml";
+const livekitPath = process.env.LIVEKIT_YAML_PATH || path.join(path.resolve(), "livekit", "livekit.yaml");
 
 if (!fs.existsSync(livekitPath)) {
-    throw new Error(`LiveKit config file not found at: ${livekitPath}`);
+    Logger.error(`LiveKit config file not found at: ${livekitPath}`);
     process.exit(0);
 }
 
