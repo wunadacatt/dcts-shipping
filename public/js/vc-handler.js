@@ -81,6 +81,15 @@ function pickLatestActiveScreenshare() {
 function rebuildVcUiFromTracks() {
     if (!voip?.participants) return;
 
+    // cleanup fucking all existing audio elements and detach internals
+    // before rebuilding to prevent this shitty ass duplicate audio streams
+    document.querySelectorAll("audio[id^='audio-global-']").forEach(a => {
+        const mid = a.getAttribute("data-member-id");
+        const isScreen = a.id.includes("-screen");
+        if (mid) voip.detachAudio(mid, isScreen);
+        a.remove();
+    });
+
     voip.participants.forEach((p, memberId) => {
         if (!memberId) return;
 
@@ -122,7 +131,6 @@ function rebuildVcUiFromTracks() {
 
         if (p.audioTrack) {
             const audioId = `audio-global-${memberId}`;
-            document.getElementById(audioId)?.remove();
             const audio = p.audioTrack.attach();
             audio.id = audioId;
             audio.autoplay = true;
@@ -133,7 +141,6 @@ function rebuildVcUiFromTracks() {
 
         if (p.screenAudioTrack) {
             const audioId = `audio-global-${memberId}-screen`;
-            document.getElementById(audioId)?.remove();
             const audio = p.screenAudioTrack.attach();
             audio.id = audioId;
             audio.autoplay = true;
@@ -142,6 +149,18 @@ function rebuildVcUiFromTracks() {
             hookVcAudio(memberId, true, audio);
         }
     });
+
+    // rebuild local ss card if sharins
+    const myId = UserManager.getID();
+    if (voip.isScreensharing && !document.getElementById(`vc-card-${myId}-screen`)) {
+        const card = getOrCreateUserCard(myId, true);
+        const video = card?.querySelector("video");
+        if (video && screenStreams[myId]) {
+            video.srcObject = screenStreams[myId];
+            video.style.display = "block";
+            video.play().catch(() => {});
+        }
+    }
 }
 
 document.addEventListener("DOMContentLoaded", async event => {
@@ -204,6 +223,10 @@ document.addEventListener("DOMContentLoaded", async event => {
 
         if (track.kind === "audio") {
             const audioId = `audio-global-${participantId}${isScreen ? '-screen' : ''}`;
+
+            // detach old audio internals BEFORE fucking removing the element
+            // prevents duplicate on resubscribe
+            voip.detachAudio(participantId, isScreen === true);
             document.getElementById(audioId)?.remove();
 
             const audio = track.attach();
@@ -248,8 +271,10 @@ document.addEventListener("DOMContentLoaded", async event => {
     };
 
 
+    // track timestamp for ALL users including local
+    // without screenStartTs isnt set for local user
+    // rebuildVcUiFromTracks cant restore the screen card after channel switch L
     voip.onScreenshareBegin = (participantId) => {
-        if (participantId === UserManager.getID()) return;
         screenStartTs[participantId] = Date.now();
     };
 
