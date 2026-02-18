@@ -17,6 +17,18 @@ Although there are still some rough edges and a few missing features, DCTS is ev
 
 ------
 
+## Which version to choose?
+
+There are 3 version you can choose depending on what you want:
+
+1. [Main](https://github.com/hackthedev/dcts-shipping/tree/main): Barely receives updates to stay stable
+2. [Beta](https://github.com/hackthedev/dcts-shipping/tree/beta) (recommended): Gets frequent updates but may still contain bugs
+3. [Dev](https://github.com/hackthedev/dcts-shipping/tree/dev):  Used for new features and experiments and can be unstable.
+
+Based on this information you can choose your version. Generally its recommended to use the beta as its the best of both worlds.
+
+------
+
 ## Support the Project <3
 
 Without community support, development may slow down significantly and could even come to a halt over time :(
