@@ -13,20 +13,25 @@ let pipLastStream = null;
 let fsMuteCache = new Map();
 
 async function hookVcAudio(mid, isScreen, audioEl) {
-    audioEl.volume = 1;
-
-    await voip.ensureAudioCtx().catch(() => {
-    });
+    await voip.ensureAudioCtx().catch(() => {});
     const ctxOk = voip._audioCtx && voip._audioCtx.state === "running";
 
     if (ctxOk) {
+        // we mute this shit because webaudio
         audioEl.muted = true;
         audioEl.volume = 0;
-        await voip.attachAudioEl(mid, isScreen, audioEl).catch(() => {
+
+        await voip.attachAudioEl(mid, isScreen, audioEl).catch(err => {
+            console.error("Failed to attach audio to WebAudio:", err);
         });
+
+        // will set webaudio heh
         voip.setVolume(mid, isScreen, voip.getVolume(mid, isScreen));
     } else {
-        audioEl.muted = isDeafened || mid === UserManager.getID();
+        // for local we dont
+        const isSelf = mid === UserManager.getID();
+        audioEl.muted = isDeafened || isSelf;
+
         const p = voip.getVolume(mid, isScreen);
         audioEl.volume = Math.max(0, Math.min(1, (Number(p) || 100) / 100));
     }
@@ -224,13 +229,19 @@ document.addEventListener("DOMContentLoaded", async event => {
         if (track.kind === "audio") {
             const audioId = `audio-global-${participantId}${isScreen ? '-screen' : ''}`;
 
-            // detach old audio internals BEFORE fucking removing the element
-            // prevents duplicate on resubscribe
+            // clean shit up first
             voip.detachAudio(participantId, isScreen === true);
-            document.getElementById(audioId)?.remove();
+            const oldEl = document.getElementById(audioId);
+            if (oldEl) {
+                oldEl.srcObject = null;
+                oldEl.remove();
+            }
 
             const audio = track.attach();
             audio.id = audioId;
+
+            // mute this shit to avoid dups
+            audio.muted = true;
             audio.autoplay = true;
             audio.setAttribute("data-member-id", participantId);
             document.body.appendChild(audio);

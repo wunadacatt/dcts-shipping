@@ -2343,7 +2343,9 @@ function scrollDown(functionCaller) {
 
     let tries = 0;
     const interval = setInterval(() => {
-        scroll();
+        requestAnimationFrame(() => {
+            scroll();
+        })
         tries++;
         if (tries > 3) clearInterval(interval);
     }, 200);
