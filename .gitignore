@@ -17,5 +17,8 @@ privatekey.json
 
 .idea
 .package-lock.json
-dcts/
-Private_Certs/
+/dcts/
+/Private_Certs/
+
+/config.env
+/livekit.yaml

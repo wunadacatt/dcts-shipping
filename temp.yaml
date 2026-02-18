@@ -12,7 +12,7 @@ redis:
   use_tls: false
 turn:
   enabled: true
-  domain: livekit.example.com #change this to the same value in the compose LIVEKIT_URL
+  domain: ${LIVEKIT_URL}
   tls_port: 5349
   udp_port: 3478
   external_tls: true

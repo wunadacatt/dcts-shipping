@@ -1,6 +1,24 @@
 services:
+  dcts-livekit:
+    image: livekit/livekit-server:latest 
+    
+    env_file:
+      - config.env
+    entrypoint: sh -c "/initialize.sh"
+    volumes:
+      - ./config.env:/config.env
+      - ./startup-files/initialize.sh:/initialize.sh
+      - ./livekit.yaml:/etc/livekit.yaml
+    ports:
+      - 7880:7880
+      - 7881:7881
+      - 7882:7882/udp
+      - 3478:3478/udp
+      - 5349:5349/tcp
+    restart: unless-stopped
+
   dcts-app:
-    image: ghcr.io/hackthedev/dcts-shipping:beta
+    build: ./
     depends_on:
       dcts-mariadb:
         condition: service_healthy
@@ -8,13 +26,13 @@ services:
         condition: service_healthy
       dcts-livekit:
         condition: service_started
+    env_file:
+      - config.env
     environment:
       - DB_HOST=dcts-mariadb
       - DB_USER=dcts
       - DB_PASS=dcts
       - DB_NAME=dcts
-      - LIVEKIT_URL=livekit.example.com #change this
-      - LIVEKIT_YAML_PATH=/etc/livekit.yaml
       - DEBUG=false # optional
     restart: unless-stopped
     volumes:
@@ -52,19 +70,10 @@ services:
       timeout: 3s
       retries: 10
 
-  dcts-livekit:
-    build: ./livekit
-    volumes:
-      - ./livekit.yaml:/etc/livekit.yaml
-    ports:
-      - 7881:7881
-      - 7882:7882/udp
-      - 3478:3478/udp
-      - 5349:5349/tcp
-    restart: unless-stopped
-
   caddy:
     image: caddy:2
+    env_file:
+      - config.env
     restart: unless-stopped
     ports:
       - 80:80

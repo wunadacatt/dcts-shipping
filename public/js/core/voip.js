@@ -296,7 +296,12 @@ class VoIP {
         this._volumes.set(key, p);
 
         const node = this._audioNodes.get(key);
-        if (node?.gain) node.gain.gain.value = p / 100;
+        if (node?.gain) {
+            node.gain.gain.value = p / 100;
+            return;
+        }
+
+        if (isScreen) return;
     }
 
     async attachAudioEl(mid, isScreen, audioEl) {
@@ -332,16 +337,17 @@ class VoIP {
         this._audioNodes.set(key, { src, gain, el: audioEl });
     }
 
-
     detachAudio(mid, isScreen) {
         const key = this._audioKey(mid, isScreen);
         const node = this._audioNodes.get(key);
         if (!node) return;
+
         try { node.gain.disconnect(); } catch(e) {}
         try { node.src?.disconnect?.(); } catch(e) {}
-        this._audioNodes.delete(key);
-    }
 
+        this._audioNodes.delete(key);
+        this._volumes.delete(key);
+    }
 
     getVolume(mid, isScreen) {
         const key = this._audioKey(mid, isScreen);

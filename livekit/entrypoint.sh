@@ -1,8 +1,6 @@
 #!/bin/sh
 
-YAML_FILE="/etc/livekit.yaml"
-
-if ! grep -q "^keys:" "$YAML_FILE" 2>/dev/null; then
+if ! grep -q "^keys:" "${LIVEKIT_YAML_PATH}" 2>/dev/null; then
     echo "Generating LiveKit keys..."
 
     OUTPUT=$(/livekit-server generate-keys)
@@ -15,16 +13,16 @@ if ! grep -q "^keys:" "$YAML_FILE" 2>/dev/null; then
         exit 1
     fi
 
-    touch "$YAML_FILE"
+    touch "${LIVEKIT_YAML_PATH}"
 
     yq -i '
       .keys = {} |
       .keys["'"$API_KEY"'"] = "'"$API_SECRET"'"
-    ' "$YAML_FILE"
+    ' "${LIVEKIT_YAML_PATH}"
 
     echo "Keys written."
 else
     echo "Keys already exist."
 fi
 
-exec /livekit-server --config "$YAML_FILE"
+exec /livekit-server --config "${LIVEKIT_YAML_PATH}"

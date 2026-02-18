@@ -1,14 +1,14 @@
 #change this to your domain for where livekit is going to live
-livekit.example.com {
+{$LIVEKIT_URL} {
     #For setting your own cert
-    #tls /etc/caddy/certs/certificate.pem /etc/caddy/certs/private.pem
+    tls /etc/caddy/certs/certificate.pem /etc/caddy/certs/private.pem
 
     encode gzip zstd
 
     reverse_proxy dcts-livekit:7880 {
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-        header_up X-Forwarded-For {remote_host}
+        transport http {
+            versions 1.1
+        }
     }
 
     header {
@@ -21,9 +21,9 @@ livekit.example.com {
 }
 
 #change this to your domain for the webui to live
-example.com {
+{$APP_URL} {
     #For setting your own cert
-    #tls /etc/caddy/certs/certificate.pem /etc/caddy/certs/private.pem
+    tls /etc/caddy/certs/certificate.pem /etc/caddy/certs/private.pem
 
     encode gzip zstd
 
