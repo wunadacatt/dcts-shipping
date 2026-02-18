@@ -396,15 +396,14 @@ const tables = [
         name: "messages",
         columns: [
             {name: "authorId", type: "varchar(100) NOT NULL"},
-            {name: "messageId", type: "varchar(100) NOT NULL"},
+            {name: "messageId", type: "varchar(100) NOT NULL UNIQUE KEY"},
             {name: "room", type: "text NOT NULL"},
             {name: "message", type: "longtext NOT NULL"},
             {
                 name: "createdAt",
                 type: "bigint NOT NULL DEFAULT (UNIX_TIMESTAMP() * 1000)",
             },
-        ],
-        keys: [{name: "UNIQUE KEY", type: "messageId (messageId)"}],
+        ]
     },
     {
         name: "message_reactions",
@@ -415,33 +414,26 @@ const tables = [
             {name: "emojiHash", type: "longtext NOT NULL"},
             {name: "memberId", type: "varchar(100) NOT NULL"},
             {name: "react_timestamp", type: "bigint NOT NULL DEFAULT (UNIX_TIMESTAMP() * 1000)"}
-        ],
-        autoIncrement: "reactionId int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1",
+        ]
     },
     {
         name: "ip_cache",
         columns: [
-            {name: "ip", type: "varchar(100) NOT NULL"},
+            {name: "ip", type: "varchar(100) NOT NULL UNIQUE KEY"},
             {name: "data", type: "longtext NOT NULL"},
             {name: "last_sync", type: "bigint NOT NULL DEFAULT (UNIX_TIMESTAMP() * 1000)"}
-        ],
-        keys: [
-            {name: "UNIQUE KEY", type: "ip (ip)"}]
-        ,
+        ]
     },
     {
         name: "cache",
         columns: [
             {name: "rowId", type: "int(12) NOT NULL AUTO_INCREMENT PRIMARY KEY"},
-            {name: "identifier", type: "varchar(255) NOT NULL"},
+            {name: "identifier", type: "varchar(255) NOT NULL UNIQUE KEY"},
             {name: "type", type: "varchar(255) NOT NULL"},
             {name: "data", type: "longtext NOT NULL"},
             {name: "last_update", type: "bigint NOT NULL DEFAULT (UNIX_TIMESTAMP() * 1000)"},
             {name: "created", type: "bigint NOT NULL DEFAULT (UNIX_TIMESTAMP() * 1000)"}
-        ],
-        keys: [
-            {name: "UNIQUE KEY", type: "identifier (identifier)"}
-        ],
+        ]
     },
     {
         name: "migrations",
@@ -454,7 +446,7 @@ const tables = [
     {
         name: "inbox",
         columns: [
-            {name: "inboxId", type: "int(100) NOT NULL AUTO_INCREMENT PRIMARY KEY"},
+            {name: "inboxId", type: "int(100) NOT NULL AUTO_INCREMENT PRIMARY KEY UNIQUE KEY"},
             {name: "memberId", type: "varchar(250) NOT NULL"},
             {name: "customId", type: "varchar(250) DEFAULT NULL"},
             {name: "data", type: "longtext NOT NULL"},
@@ -464,12 +456,7 @@ const tables = [
                 name: "createdAt",
                 type: "bigint NOT NULL DEFAULT (UNIX_TIMESTAMP() * 1000)",
             },
-        ],
-        keys: [
-            {name: "UNIQUE KEY", type: "inboxId (inboxId)"},
-            {name: "UNIQUE KEY", type: "customId (customId)"},
-        ],
-        autoIncrement: "inboxId int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55",
+        ]
     },
     {
         name: "message_logs",
@@ -484,21 +471,15 @@ const tables = [
     {
         name: "url_cache",
         columns: [
-            {name: "id", type: "int(11) NOT NULL"},
-            {name: "url", type: "longtext NOT NULL"},
+            {name: "id", type: "int(11) NOT NULL PRIMARY KEY UNIQUE KEY AUTO_INCREMENT"},
+            {name: "url", type: "longtext NOT NULL UNIQUE KEY"},
             {name: "media_type", type: "text NOT NULL"},
-        ],
-        keys: [
-            {name: "PRIMARY KEY", type: "(id)"},
-            {name: "UNIQUE KEY", type: "id (id)"},
-            {name: "UNIQUE KEY", type: "url (url) USING HASH"},
-        ],
-        autoIncrement: "id int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55",
+        ]
     },
     {
         name: "reports",
         columns: [
-            {name: "id", type: "int(11) NOT NULL"},
+            {name: "id", type: "int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT"},
             {name: "reportCreator", type: "longtext NOT NULL"},
             {name: "reportedUser", type: "longtext NOT NULL"},
             {name: "reportType", type: "text NOT NULL"},
@@ -506,49 +487,40 @@ const tables = [
             {name: "reportNotes", type: "longtext NULL"},
             {name: "reportStatus", type: "varchar(100) NOT NULL DEFAULT 'pending'"},
         ],
-        keys: [{name: "PRIMARY KEY", type: "(id)"}],
-        autoIncrement: "id int(11) NOT NULL AUTO_INCREMENT",
     }, // home section stuff
     {
         name: "dms_threads",
         columns: [
-            {name: "threadId", type: "varchar(100) NOT NULL"},
+            {name: "threadId", type: "varchar(100) NOT NULL PRIMARY KEY"},
             {name: "type", type: "varchar(50) NOT NULL"},
             {name: "title", type: "text NULL"},
         ],
-        keys: [{name: "PRIMARY KEY", type: "(threadId)"}],
     },
     {
         name: "dms_participants",
         columns: [
-            {name: "threadId", type: "varchar(100) NOT NULL"},
+            {name: "threadId", type: "varchar(100) NOT NULL PRIMARY KEY"},
             {name: "memberId", type: "varchar(100) NOT NULL"},
         ],
         keys: [
-            {name: "PRIMARY KEY", type: "(threadId, memberId)"},
             {name: "KEY", type: "memberId (memberId)"}, // <— neu
         ],
     },
     {
         name: "dms_message_logs",
         columns: [
-            {name: "id", type: "int(11) NOT NULL"},
+            {name: "id", type: "int(11) NOT NULL PRIMARY KEY UNIQUE KEY AUTO_INCREMENT"},
             {name: "messageId", type: "varchar(100) NOT NULL"},
             {name: "threadId", type: "varchar(100) NOT NULL"},
             {name: "authorId", type: "varchar(100) NOT NULL"},
             {name: "message", type: "longtext NOT NULL"},
             {name: "loggedAt", type: "datetime NOT NULL"},
-        ],
-        keys: [
-            {name: "PRIMARY KEY", type: "(id)"},
-            {name: "UNIQUE KEY", type: "id (id)"},
-        ],
-        autoIncrement: "id int(11) NOT NULL AUTO_INCREMENT",
+        ]
     },
     {
         name: "dms_messages",
         columns: [
-            {name: "messageId", type: "varchar(100) NOT NULL"},
+            {name: "messageId", type: "varchar(100) NOT NULL PRIMARY KEY"},
             {name: "threadId", type: "varchar(100) NOT NULL"},
             {name: "authorId", type: "varchar(100) NOT NULL"},
             {name: "message", type: "longtext NOT NULL"},
@@ -558,14 +530,13 @@ const tables = [
             {name: "displayName", type: "text NULL"},
         ],
         keys: [
-            {name: "PRIMARY KEY", type: "(messageId)"},
             {name: "KEY", type: "threadId (threadId)"},
         ],
     },
     {
         name: "tickets",
         columns: [
-            {name: "threadId", type: "varchar(100) NOT NULL"},
+            {name: "threadId", type: "varchar(100) NOT NULL PRIMARY KEY"},
             {name: "creatorId", type: "varchar(100) NOT NULL"},
             {name: "status", type: "varchar(20) NOT NULL DEFAULT 'open'"},
             {
@@ -578,7 +549,6 @@ const tables = [
             },
         ],
         keys: [
-            {name: "PRIMARY KEY", type: "(threadId)"},
             {name: "KEY", type: "status (status)"},
             {name: "KEY", type: "creatorId (creatorId)"},
         ],
@@ -602,7 +572,7 @@ const tables = [
     {
         name: "news",
         columns: [
-            {name: "id", type: "int(11) NOT NULL"},
+            {name: "id", type: "int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT"},
             {name: "title", type: "text NOT NULL"},
             {name: "body", type: "longtext NOT NULL"},
             {name: "authorId", type: "varchar(100) NOT NULL"},
@@ -611,15 +581,13 @@ const tables = [
                 name: "createdAt",
                 type: "datetime NOT NULL DEFAULT CURRENT_TIMESTAMP",
             },
-        ],
-        keys: [{name: "PRIMARY KEY", type: "(id)"}],
-        autoIncrement: "id int(11) NOT NULL AUTO_INCREMENT",
+        ]
     },
     {
         name: "help",
         columns: [
-            {name: "id", type: "int(11) NOT NULL"},
-            {name: "slug", type: "varchar(120) NOT NULL"},
+            {name: "id", type: "int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT"},
+            {name: "slug", type: "varchar(120) NOT NULL UNIQUE KEY"},
             {name: "title", type: "text NOT NULL"},
             {name: "body", type: "longtext NOT NULL"},
             {name: "authorId", type: "varchar(100) NOT NULL"},
@@ -628,64 +596,41 @@ const tables = [
                 name: "createdAt",
                 type: "datetime NOT NULL DEFAULT CURRENT_TIMESTAMP",
             },
-        ],
-        keys: [
-            {name: "PRIMARY KEY", type: "(id)"},
-            {name: "UNIQUE KEY", type: "slug (slug)"},
-        ],
-        autoIncrement: "id int(11) NOT NULL AUTO_INCREMENT",
+        ]
     },
     {
         name: "dms_reads",
         columns: [
-            {name: "threadId", type: "varchar(100) NOT NULL"},
+            {name: "threadId", type: "varchar(100) NOT NULL PRIMARY KEY"},
             {name: "memberId", type: "varchar(100) NOT NULL"},
             {name: "last_read_at", type: "text NOT NULL"},
-        ],
-        keys: [
-            {name: "PRIMARY KEY", type: "(threadId, memberId)"},
-            {name: "KEY", type: "threadId (threadId)"},
-            {name: "KEY", type: "memberId (memberId)"},
-        ],
+        ]
     },
     {
         name: "content_reads",
         columns: [
-            {name: "id", type: "bigint NOT NULL"},
+            {name: "id", type: "bigint NOT NULL PRIMARY KEY AUTO_INCREMENT"},
             {name: "contentType", type: "varchar(32) NOT NULL"},
             {name: "contentId", type: "bigint NOT NULL"},
             {name: "userId", type: "varchar(128) NOT NULL"},
             {name: "readAt", type: "datetime NULL"},
-            {
-                name: "createdAt",
-                type: "datetime NOT NULL DEFAULT CURRENT_TIMESTAMP",
-            },
+            {name: "createdAt",type: "datetime NOT NULL DEFAULT CURRENT_TIMESTAMP" },
         ],
         keys: [
-            {name: "PRIMARY KEY", type: "(id)"},
-            {
-                name: "UNIQUE KEY uq_content_user",
-                type: "(contentType, contentId, userId)",
-            },
+            {name: "UNIQUE KEY uq_content_user",type: "(contentType, contentId, userId)"},
             {name: "INDEX idx_user_unread", type: "(userId, readAt)"},
             {name: "INDEX idx_content", type: "(contentType, contentId)"},
         ],
-        autoIncrement: "id BIGINT NOT NULL AUTO_INCREMENT",
     },
     {
         name: "network_servers",
         columns: [
-            {name: "id", type: "int(11) NOT NULL"},
-            {name: "address", type: "varchar(255) NOT NULL"},
+            {name: "id", type: "int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT"},
+            {name: "address", type: "varchar(255) NOT NULL UNIQUE KEY"},
             {name: "status", type: "varchar(255) NOT NULL"},
             {name: "data", type: "longtext"},
             {name: "last_sync", type: "datetime NULL"},
-        ],
-        keys: [
-            {name: "PRIMARY KEY", type: "(id)"},
-            {name: "UNIQUE KEY", type: "address (address)"},
-        ],
-        autoIncrement: "id int(11) NOT NULL AUTO_INCREMENT",
+        ]
     },
     {
         name: "auditlog",
@@ -697,7 +642,7 @@ const tables = [
     {
         name: "members",
         columns: [
-            {name: "rowId", type: "int(11) NOT NULL AUTO_INCREMENT" },
+            {name: "rowId", type: "int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT" },
             {name: "id", type: "varchar(100) NOT NULL UNIQUE"},
             {name: "token", type: "varchar(255)"},
             {name: "onboarding", type: "BOOLEAN DEFAULT FALSE"},
@@ -718,12 +663,7 @@ const tables = [
             {name: "publicKey", type: "text DEFAULT ''"},
             {name: "isVerifiedKey", type: "BOOLEAN DEFAULT FALSE"},
             {name: "pow", type: "text DEFAULT ''"},
-        ],
-        keys: [
-            {name: "PRIMARY KEY", type: "(rowId)"},
-            {name: "UNIQUE KEY", type: "(id)"},
-        ],
-        autoIncrement: "rowId int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1",
+        ]
     },
 ];
 
