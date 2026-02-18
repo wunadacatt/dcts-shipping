@@ -1,7 +1,15 @@
 import {syncDiscoveredHosts} from "./modules/functions/discovery.mjs";
 
 console.clear();
-export let versionCode = 903;
+
+let versionPath = path.join(path.resolve(), "version");
+if(!fs.existsSync(versionPath)) {
+    Logger.error("Version path not found!!")
+    process.exit(1);
+}
+export let versionCode = fs.readFileSync(versionPath);
+
+
 import express from "express";
 
 export const app = express();
