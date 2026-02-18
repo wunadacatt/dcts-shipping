@@ -9,11 +9,13 @@ Although there are still some rough edges and a few missing features, DCTS is ev
 
 **If you need help** or wanna reach out to me feel free to create a **post on** the **subreddit/forum**, **message** me **on discord**, or text me **on signal: shydevil.89**.
 
+*The following screenshots use a custom theme so if you dont like anime dont be scared.*
+
 ![image-20260218045751768](./assets/image-20260218045751768.png)
 
-*(^ this is just custom theme thats included too, in case you may not like anime its not the default)*
-
 ![image-20260218045906914](./assets/image-20260218045906914.png)
+
+![image-20260218061015595](./assets/image-20260218061015595.png)
 
 ------
 
