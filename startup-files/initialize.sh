@@ -1,57 +1,65 @@
 #!/bin/sh
 
 #get api keys and secrets
-if ! grep -q "^keys:" "${LIVEKIT_YAML_PATH}" 2>/dev/null; then
-    echo "Generating LiveKit keys..."
 
-    OUTPUT=$(/livekit-server generate-keys)
-
-    API_KEY=$(echo "$OUTPUT" | awk '/API Key:/ {print $3}')
-    API_SECRET=$(echo "$OUTPUT" | awk '/API Secret:/ {print $3}')
-
-    if [ -z "$API_KEY" ] || [ -z "$API_SECRET" ]; then
-        echo "Key generation failed!"
-        exit 1
-    fi
-
-    echo "Keys written."
-else
-    echo "Keys already exist."
-fi
 
 #add api keys and secrets
 ENV_FILE="config.env"
 
 if ! grep -q "^API_KEY=" "$ENV_FILE"; then
+    if ! grep -q "^keys:" "${LIVEKIT_YAML_PATH}" 2>/dev/null; then
+        echo "Generating LiveKit keys..."
+
+        OUTPUT=$(/livekit-server generate-keys)
+
+        API_KEY=$(echo "$OUTPUT" | awk '/API Key:/ {print $3}')
+        API_SECRET=$(echo "$OUTPUT" | awk '/API Secret:/ {print $3}')
+
+        if [ -z "$API_KEY" ] || [ -z "$API_SECRET" ]; then
+            echo "Key generation failed!"
+            exit 1
+        fi
+
+        echo "Keys written."
+    else
+        LINE=$(grep -v "^keys:" "$LIVEKIT_YAML_PATH" | head -n1 | tr -d ' ')
+        API_KEY=${LINE%%:*}
+        API_SECRET=${LINE#*:}
+
+        if [ -z "$API_KEY" ] || [ -z "$API_SECRET" ]; then
+            echo "Failed to read existing keys!"
+            exit 1
+
+        echo "Loaded existing keys from ${LIVEKIT_YAML_PATH}"
+        fi
+    fi
+
+    API_KEY_CLEAN=$(echo "$API_KEY" | tr -d '\r\n')
+    API_SECRET_CLEAN=$(echo "$API_SECRET" | tr -d '\r\n')
+
+
+    echo "" >> "$ENV_FILE"
     echo "" >> "$ENV_FILE"
     echo "# SECRET KEYS DO NOT EDIT" >> "$ENV_FILE"
     
-    echo "API_KEY=$API_KEY" >> "$ENV_FILE"
-    echo "API_SECRET=$API_SECRET" >> "$ENV_FILE"
+    echo "API_KEY=$API_KEY_CLEAN" >> "$ENV_FILE"
+    echo "API_SECRET=$API_SECRET_CLEAN" >> "$ENV_FILE"
 
     echo "API keys added to $ENV_FILE"
 else
-    echo "API keys already exist in $ENV_FILE"
-fi
-
-# Check if the file exists first
-if [ -f "${LIVEKIT_YAML_PATH}" ]; then
-    # Count the number of lines
-    line_count=$(wc -l < "${LIVEKIT_YAML_PATH}")
-    
-    if [ "$line_count" -le 1 ]; then
-        echo "File exists but has 1 or 0 lines, skipping..."
-        # You can use 'continue' in a loop or 'exit' depending on context
-        next  # replace 'next' with your actual command
-    else
-        echo "File exists and has more than one line, processing..."
-        # your processing logic here
+    if grep -q "^API_KEY=" "$ENV_FILE"; then
+        API_KEY=$(grep "^API_KEY=" "$ENV_FILE" | cut -d '=' -f2-)
     fi
-else
-    echo "File does not exist, skipping..."
-    next  # again, replace with your actual command
-fi
 
+    if grep -q "^API_SECRET=" "$ENV_FILE"; then
+        API_SECRET=$(grep "^API_SECRET=" "$ENV_FILE" | cut -d '=' -f2-)
+    fi
+
+    API_KEY_CLEAN=$(echo "$API_KEY" | tr -d '\r\n')
+    API_SECRET_CLEAN=$(echo "$API_SECRET" | tr -d '\r\n')
+
+    echo "Loaded API keys from $ENV_FILE"
+fi
 
 #livekit.yaml creation
 echo "Creating base LiveKit config..."
@@ -76,7 +84,7 @@ turn:
   udp_port: 3478
   external_tls: true
 keys:
-  $API_KEY:$API_SECRET
+  '$API_KEY_CLEAN': '$API_SECRET_CLEAN'
 EOF
 
 

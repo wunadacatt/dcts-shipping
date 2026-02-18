@@ -10,6 +10,7 @@ services:
       - ./startup-files/initialize.sh:/initialize.sh
       - ./livekit.yaml:/etc/livekit.yaml
     ports:
+      - 7880:7880
       - 7881:7881
       - 7882:7882/udp
       - 3478:3478/udp
