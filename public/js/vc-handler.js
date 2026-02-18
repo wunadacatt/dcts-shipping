@@ -12,30 +12,45 @@ let pipLastStream = null;
 
 let fsMuteCache = new Map();
 
-async function setVcVolume(mid, isScreen, percent){
-    const p = Math.max(0, Math.min(400, Number(percent) || 0));
-    voip.setVolume(mid, isScreen, p);
+async function hookVcAudio(mid, isScreen, audioEl) {
+    audioEl.volume = 1;
 
-    const key = `${mid}:${isScreen ? "screen" : "user"}`;
-    if (fsMuteCache.has(key)) fsMuteCache.delete(key);
+    await voip.ensureAudioCtx().catch(() => {
+    });
+    const ctxOk = voip._audioCtx && voip._audioCtx.state === "running";
 
-    const audioId = `audio-global-${mid}${isScreen ? '-screen' : ''}`;
-    const el = document.getElementById(audioId);
-
-    if (el) {
-        el.muted = true;
-        el.volume = 0;
-        await voip.ensureAudioCtx().catch(()=>{});
-        await voip.attachAudioEl(mid, isScreen, el).catch(()=>{});
+    if (ctxOk) {
+        audioEl.muted = true;
+        audioEl.volume = 0;
+        await voip.attachAudioEl(mid, isScreen, audioEl).catch(() => {
+        });
+        voip.setVolume(mid, isScreen, voip.getVolume(mid, isScreen));
+    } else {
+        audioEl.muted = isDeafened || mid === UserManager.getID();
+        const p = voip.getVolume(mid, isScreen);
+        audioEl.volume = Math.max(0, Math.min(1, (Number(p) || 100) / 100));
     }
 }
 
-async function hookVcAudio(mid, isScreen, audioEl){
-    audioEl.muted = true;
-    audioEl.volume = 0;
-    await voip.ensureAudioCtx().catch(()=>{});
-    await voip.attachAudioEl(mid, isScreen, audioEl).catch(()=>{});
-    voip.setVolume(mid, isScreen, voip.getVolume(mid, isScreen));
+
+async function setVcVolume(mid, isScreen, percent) {
+    const p = Math.max(0, Math.min(400, Number(percent) || 0));
+    voip.setVolume(mid, isScreen, p);
+
+    if (isScreen) return;
+
+    const audioId = `audio-global-${mid}`;
+    const el = document.getElementById(audioId);
+    if (!el) return;
+
+    await voip.ensureAudioCtx().catch(() => {
+    });
+    const ctxOk = voip._audioCtx && voip._audioCtx.state === "running";
+
+    if (!ctxOk) {
+        el.volume = Math.max(0, Math.min(1, p / 100));
+        el.muted = isDeafened || mid === UserManager.getID();
+    }
 }
 
 
@@ -63,38 +78,40 @@ function pickLatestActiveScreenshare() {
     }
 }
 
-function rebuildVcUiFromTracks(){
-    if(!voip?.participants) return;
+function rebuildVcUiFromTracks() {
+    if (!voip?.participants) return;
 
     voip.participants.forEach((p, memberId) => {
-        if(!memberId) return;
+        if (!memberId) return;
 
-        if(p.videoTrack){
+        if (p.videoTrack) {
             const card = getOrCreateUserCard(memberId, false);
             const video = card?.querySelector("video");
-            if(video){
+            if (video) {
                 p.videoTrack.attach(video);
                 video.muted = true;
                 video.style.display = "block";
-                video.play().catch(()=>{});
+                video.play().catch(() => {
+                });
                 const mst = p.videoTrack.mediaStreamTrack;
-                if(mst) lastUserStream = new MediaStream([mst]);
+                if (mst) lastUserStream = new MediaStream([mst]);
             }
         }
 
-        if(p.screenTrack){
+        if (p.screenTrack) {
             const card = getOrCreateUserCard(memberId, true);
             const video = card?.querySelector("video");
-            if(video){
+            if (video) {
                 p.screenTrack.attach(video);
                 video.muted = true;
                 video.style.display = "block";
-                video.play().catch(()=>{});
+                video.play().catch(() => {
+                });
                 const mst = p.screenTrack.mediaStreamTrack;
-                if(mst){
+                if (mst) {
                     screenStreams[memberId] = new MediaStream([mst]);
                     const ts = screenStartTs[memberId] || 0;
-                    if(ts >= lastScreenCreatedAt){
+                    if (ts >= lastScreenCreatedAt) {
                         lastScreenCreatedAt = ts || Date.now();
                         lastScreenOwner = memberId;
                         lastScreenStream = screenStreams[memberId];
@@ -103,26 +120,24 @@ function rebuildVcUiFromTracks(){
             }
         }
 
-        if(p.audioTrack){
+        if (p.audioTrack) {
             const audioId = `audio-global-${memberId}`;
             document.getElementById(audioId)?.remove();
             const audio = p.audioTrack.attach();
             audio.id = audioId;
             audio.autoplay = true;
             audio.setAttribute("data-member-id", memberId);
-            audio.muted = isDeafened || memberId === UserManager.getID();
             document.body.appendChild(audio);
             hookVcAudio(memberId, false, audio);
         }
 
-        if(p.screenAudioTrack){
+        if (p.screenAudioTrack) {
             const audioId = `audio-global-${memberId}-screen`;
             document.getElementById(audioId)?.remove();
             const audio = p.screenAudioTrack.attach();
             audio.id = audioId;
             audio.autoplay = true;
             audio.setAttribute("data-member-id", memberId);
-            audio.muted = isDeafened || memberId === UserManager.getID();
             document.body.appendChild(audio);
             hookVcAudio(memberId, true, audio);
         }
@@ -130,9 +145,22 @@ function rebuildVcUiFromTracks(){
 }
 
 document.addEventListener("DOMContentLoaded", async event => {
-
     initGlobalPip();
     setInterval(checkPipVisibility, 500);
+
+    socket.on('connect', () => {
+        document.querySelectorAll('#channellist li[data-channel-id]').forEach(li => {
+            syncVcChannelMembers(li.dataset.channelId);
+        });
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            document.querySelectorAll('#channellist li[data-channel-id]').forEach(li => {
+                syncVcChannelMembers(li.dataset.channelId);
+            });
+        }
+    });
 
     voip.onJoin = (username) => {
         if (username === UserManager.getID()) {
@@ -143,7 +171,6 @@ document.addEventListener("DOMContentLoaded", async event => {
             });
 
             isDeafened = false;
-
             updateUiButtons();
         }
 
@@ -164,7 +191,7 @@ document.addEventListener("DOMContentLoaded", async event => {
 
         delete screenStartTs[participantId];
         delete screenStreams[participantId];
-        if(participantId === lastScreenOwner){
+        if (participantId === lastScreenOwner) {
             pickLatestActiveScreenshare();
         }
 
@@ -172,11 +199,10 @@ document.addEventListener("DOMContentLoaded", async event => {
     };
 
 
-
     voip.onTrackSubscribed = (track, participantId, isScreen) => {
         getOrCreateUserCard(participantId, isScreen === true);
 
-        if(track.kind === "audio"){
+        if (track.kind === "audio") {
             const audioId = `audio-global-${participantId}${isScreen ? '-screen' : ''}`;
             document.getElementById(audioId)?.remove();
 
@@ -184,32 +210,32 @@ document.addEventListener("DOMContentLoaded", async event => {
             audio.id = audioId;
             audio.autoplay = true;
             audio.setAttribute("data-member-id", participantId);
-            audio.muted = isDeafened || participantId === UserManager.getID();
             document.body.appendChild(audio);
 
             hookVcAudio(participantId, isScreen === true, audio);
             return;
         }
 
-        if(track.kind === "video"){
+        if (track.kind === "video") {
             const card = getOrCreateUserCard(participantId, isScreen === true);
             const video = card?.querySelector("video");
-            if(!video) return;
+            if (!video) return;
 
             track.attach(video);
             video.muted = true;
             video.style.display = "block";
-            video.play().catch(()=>{});
+            video.play().catch(() => {
+            });
 
             const mst = track.mediaStreamTrack;
-            if(mst){
+            if (mst) {
                 const s = new MediaStream([mst]);
 
-                if(isScreen){
+                if (isScreen) {
                     screenStreams[participantId] = s;
 
                     const ts = screenStartTs[participantId] || Date.now();
-                    if(ts >= lastScreenCreatedAt){
+                    if (ts >= lastScreenCreatedAt) {
                         lastScreenCreatedAt = ts;
                         lastScreenOwner = participantId;
                         lastScreenStream = s;
@@ -222,17 +248,22 @@ document.addEventListener("DOMContentLoaded", async event => {
     };
 
 
-
     voip.onScreenshareBegin = (participantId) => {
         if (participantId === UserManager.getID()) return;
         screenStartTs[participantId] = Date.now();
     };
 
     voip.onScreenshareEnd = (participantId) => {
-        document.querySelectorAll(`.vc-card[data-member-id="${participantId}"][data-type="screen"]`).forEach(e => e.remove());
-        document.querySelectorAll(`audio[id^="audio-global-${participantId}-screen"]`).forEach(a => a.remove());
+        document
+            .querySelectorAll(`.vc-card[data-member-id="${participantId}"][data-type="screen"]`)
+            .forEach(e => e.remove());
+
+        document
+            .querySelectorAll(`audio[id^="audio-global-${participantId}-screen"]`)
+            .forEach(a => a.remove());
 
         voip.detachAudio(participantId, true);
+        voip._volumes.delete(`${participantId}:screen`);
 
         delete screenStartTs[participantId];
         delete screenStreams[participantId];
@@ -279,9 +310,6 @@ document.addEventListener("DOMContentLoaded", async event => {
     });
 });
 
-function getStreamContainer() {
-    return document.getElementById("vc-grid");
-}
 
 function getOrCreateUserCard(memberId, isScreen = false) {
     let grid = document.getElementById("vc-grid");
@@ -303,7 +331,7 @@ function getOrCreateUserCard(memberId, isScreen = false) {
     
         ${isScreen ? "" : `
           <div class="avatar-container">
-            <img class="vc-avatar" src="/img/default_icon.png" data-member-id="${memberId}">
+            <img class="vc-avatar" src="/img/default_pfp.png" data-member-id="${memberId}">
           </div>
         `}
     
@@ -340,9 +368,10 @@ function getOrCreateUserCard(memberId, isScreen = false) {
     ChatManager.resolveMember(memberId).then(member => {
         if (!card || !document.body.contains(card)) return;
         if (member) {
+            if (member.icon === "null") member.icon = null;
             const avatar = card.querySelector(".vc-avatar");
             const uname = card.querySelector(".username .uname");
-            if (avatar) avatar.src = member.icon || "/img/default_icon.png";
+            if (avatar) avatar.src = member.icon || "/img/default_pfp.png";
             if (uname) uname.innerText = member.name;
         }
     });
@@ -481,28 +510,28 @@ function checkPipVisibility() {
 
 function togglePip(show) {
     const pip = document.getElementById("vc-pip-overlay");
-    if(!pip) return;
+    if (!pip) return;
 
     pip.style.display = show ? "flex" : "none";
-    if(!show){
+    if (!show) {
         pipLastStream = null;
         return;
     }
 
     let stream = lastScreenStream || lastUserStream || null;
 
-    if(!stream){
+    if (!stream) {
         const audio = document.querySelector("audio[id^='audio-global-']");
-        if(audio?.srcObject) stream = audio.srcObject;
+        if (audio?.srcObject) stream = audio.srcObject;
     }
 
-    if(stream === pipLastStream) return;
+    if (stream === pipLastStream) return;
     pipLastStream = stream;
 
     const pipContent = document.getElementById("vc-pip-content");
     pipContent.innerHTML = "";
 
-    if(!stream){
+    if (!stream) {
         pipContent.innerHTML = `<div style="color:#aaa;font-weight:bold;">Voice Active</div>`;
         return;
     }
@@ -513,7 +542,8 @@ function togglePip(show) {
     v.muted = true;
     v.playsInline = true;
     pipContent.appendChild(v);
-    v.play().catch(()=>{});
+    v.play().catch(() => {
+    });
 
     updateUiButtons();
 }
@@ -569,10 +599,10 @@ function makePipDraggable() {
             const maxLeft = window.innerWidth - w;
             const maxTop = window.innerHeight - h;
 
-            if(left < 0) left = 0;
-            if(top < 0) top = 0;
-            if(left > maxLeft) left = maxLeft;
-            if(top > maxTop) top = maxTop;
+            if (left < 0) left = 0;
+            if (top < 0) top = 0;
+            if (left > maxLeft) left = maxLeft;
+            if (top > maxTop) top = maxTop;
 
             el.style.left = left + "px";
             el.style.top = top + "px";
@@ -605,21 +635,42 @@ async function toggleMic() {
     setTimeout(updateUiButtons, 50);
 }
 
-
 async function toggleDeafen() {
     isDeafened = !isDeafened;
-    if(isDeafened) await voip.muteMic()
-    if(!isDeafened) await voip.unmuteMic()
 
-    document.querySelectorAll("audio[id^='audio-global-']").forEach(a => a.muted = isDeafened);
+    if (isDeafened) await voip.muteMic();
+    else await voip.unmuteMic();
+
+    voip._audioNodes.forEach((node, key) => {
+        if (!node?.gain) return;
+        if (isDeafened) {
+            node.gain.gain.value = 0;
+        } else {
+            const p = voip._volumes.get(key) ?? 100;
+            node.gain.gain.value = p / 100;
+        }
+    });
+
+    document.querySelectorAll("audio[id^='audio-global-']").forEach(a => {
+        a.muted = isDeafened;
+    });
+
     updateUiButtons();
 }
 
+
 function leaveVC() {
+    const cid = connectedVcChannel || UserManager.getChannel();
+    const myId = UserManager.getID();
+
     voip.leaveRoom();
-    emitVcMemberLeft(UserManager.getID(), connectedVcChannel);
+
+    removeVcMemberFromChannel(cid, myId);
+    emitVcMemberLeft(myId, cid);
+
     isInVc = false;
     isDeafened = false;
+    connectedVcChannel = 0;
     toggleProfileQaIndicator(false);
     document.getElementById("content").innerHTML = "";
     document.getElementById("channelname-icons").innerHTML = "";
@@ -627,8 +678,15 @@ function leaveVC() {
     if (pip) pip.style.display = "none";
     document.querySelectorAll("audio[id^='audio-global-']").forEach(el => el.remove());
 
-    voip.detachAudio(UserManager.getID(), false);
-    voip.detachAudio(UserManager.getID(), true);
+    voip.detachAudio(myId, false);
+    voip.detachAudio(myId, true);
+
+    screenStartTs = {};
+    screenStreams = {};
+    lastScreenOwner = null;
+    lastScreenCreatedAt = 0;
+    lastScreenStream = null;
+    lastUserStream = null;
 }
 
 
@@ -776,13 +834,22 @@ function emitVcMemberLeft(mid, cid) {
     });
 }
 
+function checkVcMemberChannel(cid, mid) {
+    let container = document.querySelector(`#channellist li[data-channel-id="${cid}"] .participants`);
+    return {element: container, status: !!container};
+}
+
 async function addVcMemberToChannel(cid, mid) {
     let check = checkVcMemberChannel(cid, mid);
     if (!check.status) return;
-    let m = await ChatManager.resolveMember(mid);
+    let m = await ChatManager.resolveMember(mid).catch(() => null);
     if (!m) return;
     if (!check.element.querySelector(`li[data-member-id='${m.id}']`)) {
-        check.element.insertAdjacentHTML("beforeend", `<li class="participant" data-member-id="${m.id}"><img class="avatar" src="${m.icon || '/img/default_icon.png'}">${m.name}</li>`);
+
+        if (m.icon === "null") m.icon = null;
+        check.element.insertAdjacentHTML("beforeend",
+            `<li class="participant" data-member-id="${m.id}"><img class="avatar" src="${m.icon || '/img/default_pfp.png'}">${m.name}</li>`
+        );
         check.element.style.display = "flex";
     }
 }
@@ -794,7 +861,34 @@ function removeVcMemberFromChannel(cid, mid) {
     if (check.element.querySelectorAll("li").length === 0) check.element.style.display = "none";
 }
 
-function checkVcMemberChannel(cid, mid) {
-    let container = document.querySelector(`#channellist li[data-channel-id="${cid}"] .participants`);
-    return {element: container, status: !!container};
+async function syncVcChannelMembers(channelId) {
+    const cid = String(channelId);
+    const check = checkVcMemberChannel(cid);
+    if (!check.status) return;
+
+    const res = await getVCMembers(cid).catch(() => null);
+    const list = res?.members || [];
+
+    check.element.innerHTML = "";
+
+    if (list.length === 0) {
+        check.element.style.display = "none";
+        return;
+    }
+
+    for (const mid of list) {
+        const m = await ChatManager.resolveMember(String(mid)).catch(() => null);
+        if (!m) continue;
+
+        if (m.icon === "null") m.icon = null;
+        check.element.insertAdjacentHTML("beforeend",
+            `<li class="participant" data-member-id="${m.id}"><img class="avatar" src="${m.icon || '/img/default_pfp.png'}">${m.name}</li>`
+        );
+    }
+
+    check.element.style.display = check.element.querySelectorAll("li").length > 0 ? "flex" : "none";
+}
+
+async function onChannelUiRendered(channelId) {
+    await syncVcChannelMembers(channelId);
 }
