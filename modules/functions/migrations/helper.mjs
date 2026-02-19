@@ -2,8 +2,8 @@ import {queryDatabase} from "../mysql/mysql.mjs";
 import {backupSystem} from "../main.mjs";
 import {migrateOldMessagesToNewMessageSystemWithoutEncoding} from "./messageMigration.mjs";
 import {clearMemberBase64FromDb} from "./base64_fixer.mjs";
-import Logger from "@hackthedev/terminal-logger"
 import {saveConfig, serverconfig, versionCode} from "../../../index.mjs";
+import Logger from "@hackthedev/terminal-logger";
 
 export async function createMigrationTask(name){
     return await queryDatabase("INSERT IGNORE INTO migrations (migration_name) VALUES (?)", [name])
@@ -66,15 +66,22 @@ export async function checkMigrations(){
     migrationTask = await getMigrationTask("mainMerge", true);
     if(migrationTask && migrationTask?.done === 0){
         await doBackup()
-        await queryDatabase("ALTER TABLE `messages` ADD UNIQUE KEY `messageId` (`messageId`)", []);
-        await queryDatabase("ALTER TABLE `members` ADD COLUMN `country_code` VARCHAR(50) DEFAULT NULL", []);
-        await queryDatabase("ALTER TABLE `members` MODIFY `token` VARCHAR(255)", []);
-        await queryDatabase("ALTER TABLE `members` MODIFY `name` VARCHAR(100) NOT NULL DEFAULT 'User'", []);
-        await queryDatabase("ALTER TABLE `members` MODIFY `password` TEXT DEFAULT NULL", []);
-        await queryDatabase("ALTER TABLE `dms_participants` ADD KEY `memberId` (`memberId`)", []);
-        await queryDatabase("ALTER TABLE `url_cache` ADD UNIQUE KEY `url` (`url`)", []);
-        await queryDatabase("ALTER TABLE `content_reads` MODIFY `id` BIGINT NOT NULL AUTO_INCREMENT", []);
-        await queryDatabase("ALTER TABLE `message_logs` MODIFY `id` INT(100) NOT NULL AUTO_INCREMENT", []);
+
+        try{
+            await queryDatabase("ALTER TABLE `messages` ADD UNIQUE KEY `messageId` (`messageId`)", []);
+            await queryDatabase("ALTER TABLE `members` ADD COLUMN `country_code` VARCHAR(50) DEFAULT NULL", []);
+            await queryDatabase("ALTER TABLE `members` MODIFY `token` VARCHAR(255)", []);
+            await queryDatabase("ALTER TABLE `members` MODIFY `name` VARCHAR(100) NOT NULL DEFAULT 'User'", []);
+            await queryDatabase("ALTER TABLE `members` MODIFY `password` TEXT DEFAULT NULL", []);
+            await queryDatabase("ALTER TABLE `dms_participants` ADD KEY `memberId` (`memberId`)", []);
+            await queryDatabase("ALTER TABLE `url_cache` ADD UNIQUE KEY `url` (`url`)", []);
+            await queryDatabase("ALTER TABLE `content_reads` MODIFY `id` BIGINT NOT NULL AUTO_INCREMENT", []);
+            await queryDatabase("ALTER TABLE `message_logs` MODIFY `id` INT(100) NOT NULL AUTO_INCREMENT", []);
+        }catch(err){
+            Logger.error("DB Migration failed and wont be retried!")
+            Logger.error(err);
+            await completeMigrationTask("mainMerge")
+        }
 
         await completeMigrationTask("mainMerge")
     }
