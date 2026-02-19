@@ -62,6 +62,23 @@ export async function checkMigrations(){
         await completeMigrationTask("fixAutoIncrementInMessageLogs")
     }
 
+    // beta to main update
+    migrationTask = await getMigrationTask("mainMerge", true);
+    if(migrationTask && migrationTask?.done === 0){
+        await doBackup()
+        await queryDatabase("ALTER TABLE `messages` ADD UNIQUE KEY `messageId` (`messageId`)", []);
+        await queryDatabase("ALTER TABLE `members` ADD COLUMN `country_code` VARCHAR(50) DEFAULT NULL", []);
+        await queryDatabase("ALTER TABLE `members` MODIFY `token` VARCHAR(255)", []);
+        await queryDatabase("ALTER TABLE `members` MODIFY `name` VARCHAR(100) NOT NULL DEFAULT 'User'", []);
+        await queryDatabase("ALTER TABLE `members` MODIFY `password` TEXT DEFAULT NULL", []);
+        await queryDatabase("ALTER TABLE `dms_participants` ADD KEY `memberId` (`memberId`)", []);
+        await queryDatabase("ALTER TABLE `url_cache` ADD UNIQUE KEY `url` (`url`)", []);
+        await queryDatabase("ALTER TABLE `content_reads` MODIFY `id` BIGINT NOT NULL AUTO_INCREMENT", []);
+        await queryDatabase("ALTER TABLE `message_logs` MODIFY `id` INT(100) NOT NULL AUTO_INCREMENT", []);
+
+        await completeMigrationTask("mainMerge")
+    }
+
     // fix 1erb45 ids to 123254345
     migrationTask = await getMigrationTask("fixPRIds", true);
     if(migrationTask && migrationTask?.done === 0){
