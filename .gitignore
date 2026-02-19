@@ -22,3 +22,4 @@ privatekey.json
 
 /config.env
 /livekit.yaml
+/public/plugins
