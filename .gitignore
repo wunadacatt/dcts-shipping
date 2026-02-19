@@ -22,6 +22,7 @@ privatekey.json
 
 /config.env
 /livekit.yaml
+/public/plugins
 public/css/themes/your-name/background.gif
 public/css/themes/your-name/config.json
 public/css/themes/your-name/thumbnail.png
